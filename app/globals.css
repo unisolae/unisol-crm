@@ -687,3 +687,74 @@ h3,
     font-size: 13px;
   }
 }
+
+/* ---------- INLINE EDIT (στη λίστα) ---------- */
+.cell-edit {
+  padding: 8px 10px !important;
+}
+
+.inline-control {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  cursor: pointer;
+  max-width: 100%;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.inline-control:hover {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.inline-control:focus {
+  outline: none;
+  border-color: var(--ink-2);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(29, 74, 67, 0.1);
+}
+
+.inline-control.saving {
+  opacity: 0.5;
+}
+
+.inline-status {
+  font-weight: 600;
+}
+
+.inline-status[data-st='active'] {
+  color: #0f6e56;
+}
+
+.inline-status[data-st='closed'] {
+  color: #185fa5;
+}
+
+.inline-status[data-st='negative'] {
+  color: #a32d2d;
+}
+
+.inline-status[data-st='unknown'] {
+  color: #6b7670;
+}
+
+.inline-size-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.inline-size {
+  width: 76px;
+  cursor: text;
+  text-align: right;
+}
+
+.euro {
+  color: var(--muted);
+  font-size: 13.5px;
+}

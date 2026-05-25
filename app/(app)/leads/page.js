@@ -1,13 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import LeadsFilters from './LeadsFilters';
-
-const STATUS = {
-  unknown: { label: 'Άγνωστη', cls: 'st-unknown' },
-  active: { label: 'Ενεργή', cls: 'st-active' },
-  closed: { label: 'Κλειστή', cls: 'st-closed' },
-  negative: { label: 'Αρνητική', cls: 'st-negative' },
-};
+import { InlineStatus, InlineSalesperson, InlineSize } from './InlineEdit';
 
 export default async function LeadsPage({ searchParams }) {
   const sp = await searchParams;
@@ -24,7 +18,7 @@ export default async function LeadsPage({ searchParams }) {
 
   let query = supabase
     .from('leads')
-    .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salespeople(name)')
+    .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, salespeople(name)')
     .order('created_at', { ascending: false })
     .limit(300);
 
@@ -67,7 +61,6 @@ export default async function LeadsPage({ searchParams }) {
           </thead>
           <tbody>
             {(leads ?? []).map((l) => {
-              const st = STATUS[l.crm_status] ?? STATUS.unknown;
               return (
                 <tr key={l.id} className="row-link">
                   <td className="cell-main">
@@ -81,10 +74,14 @@ export default async function LeadsPage({ searchParams }) {
                     {l.municipality && <span className="cell-sub">{l.municipality}</span>}
                   </td>
                   <td>{l.associate || (l.source === 'manual' ? '—' : '')}</td>
-                  <td>{l.salespeople?.name || <span className="muted">—</span>}</td>
-                  <td>{l.lead_size_eur ? `${Number(l.lead_size_eur).toLocaleString('el-GR')}€` : '—'}</td>
-                  <td>
-                    <span className={`badge ${st.cls}`}>{st.label}</span>
+                  <td className="cell-edit">
+                    <InlineSalesperson id={l.id} value={l.salesperson_id} salespeople={salespeople ?? []} />
+                  </td>
+                  <td className="cell-edit">
+                    <InlineSize id={l.id} value={l.lead_size_eur} />
+                  </td>
+                  <td className="cell-edit">
+                    <InlineStatus id={l.id} value={l.crm_status} />
                   </td>
                 </tr>
               );

@@ -75,3 +75,20 @@ export async function updateLead(id, formData) {
   revalidatePath('/leads');
   redirect(`/leads/${id}`);
 }
+
+// Γρήγορη ενημέρωση επιλεγμένων πεδίων κατευθείαν από τη λίστα (inline edit).
+export async function quickUpdateLead(id, patch) {
+  const supabase = await createClient();
+
+  const allowed = {};
+  if ('crm_status' in patch) allowed.crm_status = clean(patch.crm_status) || 'unknown';
+  if ('salesperson_id' in patch) allowed.salesperson_id = clean(patch.salesperson_id);
+  if ('lead_size_eur' in patch) allowed.lead_size_eur = num(patch.lead_size_eur);
+  allowed.updated_at = new Date().toISOString();
+
+  const { error } = await supabase.from('leads').update(allowed).eq('id', id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/leads');
+  return { ok: true };
+}
