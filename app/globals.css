@@ -961,3 +961,188 @@ h3,
   color: var(--text);
   margin-bottom: 16px;
 }
+
+/* ============================================================
+   Εισερχόμενα / Εκκρεμότητες (Inbox)
+   ============================================================ */
+.inbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.inbox-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.inbox-tab {
+  border: none;
+  background: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.inbox-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.inbox-tab .cnt {
+  font-size: 11px;
+  background: var(--cream);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 1px 7px;
+  min-width: 18px;
+  text-align: center;
+}
+.inbox-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.inbox-controls select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.inbox-list {
+  display: flex;
+  flex-direction: column;
+}
+.inbox-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.inbox-row:first-child {
+  border-top: none;
+}
+.inbox-main {
+  flex: 1;
+  min-width: 0;
+}
+.inbox-body {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+}
+.inbox-meta {
+  margin-top: 5px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.inbox-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.inbox-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chip-link {
+  text-decoration: none;
+  color: var(--ink-2);
+}
+.chip-link:hover {
+  background: #e6ded0;
+}
+.chip-group {
+  background: #ece8fa;
+  color: #3c3489;
+}
+
+.msg-tag {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tag-message { background: #dfe9f6; color: #1c4c7c; }
+.tag-callback { background: #f7e6dd; color: #993c1d; }
+.tag-reminder { background: #faeeda; color: #633806; }
+.tag-followup { background: var(--cream); color: var(--muted); }
+
+.msg-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.st-msg-new { background: #dfe9f6; color: #1c4c7c; }
+.st-msg-prog { background: #faeeda; color: #633806; }
+.st-msg-done { background: #d9ede4; color: #0f6e56; }
+.st-msg-cancel { background: var(--cream); color: var(--muted); }
+
+.due {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.due-over { color: var(--danger); font-weight: 600; }
+.due-today { color: var(--accent); }
+.due-future { color: var(--muted); }
+
+.btn-mini {
+  font-size: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 3px 9px;
+  cursor: pointer;
+  color: var(--text);
+  white-space: nowrap;
+}
+.btn-mini:hover { background: var(--cream); }
+.btn-mini:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Segmented control (επιλογή τύπου παραλήπτη) */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-btn {
+  border: none;
+  background: #fff;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.seg-btn.active {
+  background: var(--accent);
+  color: #fff;
+}

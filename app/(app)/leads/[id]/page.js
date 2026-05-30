@@ -27,16 +27,17 @@ export default async function LeadDetail({ params }) {
 
   const { data: lead } = await supabase
     .from('leads')
-    .select('*, salespeople(name)')
+    .select('*, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
     .eq('id', id)
     .single();
 
   if (!lead) notFound();
 
   const { data: salespeople } = await supabase
-    .from('salespeople')
-    .select('id, name')
-    .order('name');
+    .from('profiles')
+    .select('id, name:full_name')
+    .eq('is_salesperson', true)
+    .order('full_name');
 
   const st = STATUS[lead.crm_status] ?? STATUS.unknown;
   const updateAction = updateLead.bind(null, id);

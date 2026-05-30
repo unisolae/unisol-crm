@@ -14,13 +14,14 @@ export default async function LeadsPage({ searchParams }) {
   const supabase = await createClient();
 
   const { data: salespeople } = await supabase
-    .from('salespeople')
-    .select('id, name')
-    .order('name');
+    .from('profiles')
+    .select('id, name:full_name')
+    .eq('is_salesperson', true)
+    .order('full_name');
 
   let query = supabase
     .from('leads')
-    .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople(name)')
+    .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
     .order('created_at', { ascending: false })
     .limit(300);
 

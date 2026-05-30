@@ -6,9 +6,10 @@ import { PRIORITY, LEAD_TYPE } from '@/lib/labels';
 export default async function NewLeadPage() {
   const supabase = await createClient();
   const { data: salespeople } = await supabase
-    .from('salespeople')
-    .select('id, name')
-    .order('name');
+    .from('profiles')
+    .select('id, name:full_name')
+    .eq('is_salesperson', true)
+    .order('full_name');
 
   return (
     <div className="page narrow">
