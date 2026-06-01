@@ -94,3 +94,50 @@ export async function createAction(leadId, formData) {
   revalidatePath('/actions');
   return { ok: true };
 }
+
+// --- Επεξεργασία υπάρχουσας ενέργειας ----------------------------------------
+export async function updateAction(actionId, formData) {
+  const supabase = await createClient();
+
+  const patch = {
+    description: clean(formData.get('description')),
+    result: clean(formData.get('result')),
+    is_final: formData.get('is_final') === 'on',
+    next_action_at: clean(formData.get('next_action_at')),
+    notes: clean(formData.get('notes')),
+  };
+
+  const { data: existing, error: e0 } = await supabase
+    .from('actions')
+    .select('lead_id')
+    .eq('id', actionId)
+    .single();
+  if (e0) return { error: e0.message };
+
+  const { error } = await supabase.from('actions').update(patch).eq('id', actionId);
+  if (error) return { error: error.message };
+
+  if (existing?.lead_id) revalidatePath(`/leads/${existing.lead_id}`);
+  revalidatePath('/actions');
+  revalidatePath('/calendar');
+  return { ok: true };
+}
+
+// --- Διαγραφή ενέργειας ------------------------------------------------------
+export async function deleteAction(actionId) {
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from('actions')
+    .select('lead_id')
+    .eq('id', actionId)
+    .single();
+
+  const { error } = await supabase.from('actions').delete().eq('id', actionId);
+  if (error) return { error: error.message };
+
+  if (existing?.lead_id) revalidatePath(`/leads/${existing.lead_id}`);
+  revalidatePath('/actions');
+  revalidatePath('/calendar');
+  return { ok: true };
+}
