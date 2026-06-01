@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { updateLead } from '../actions';
-import { createAction } from '@/app/(app)/actions/actions';
+import { createAction, updateAction, deleteAction } from '@/app/(app)/actions/actions';
 import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
+import ActionItem from './ActionItem';
 
 const STATUS = {
   unknown: { label: 'Άγνωστη', cls: 'st-unknown' },
@@ -119,26 +120,12 @@ export default async function LeadDetail({ params }) {
         ) : (
           <ol className="timeline">
             {leadActions.map((a) => (
-              <li key={a.id} className="timeline-item">
-                <span className="timeline-dot" aria-hidden="true" />
-                <div className="timeline-body">
-                  <div className="timeline-top">
-                    <span className="timeline-when">{fmtDateTime(a.acted_at)}</span>
-                    {a.salesperson?.name && (
-                      <span className="timeline-who">· {a.salesperson.name}</span>
-                    )}
-                    {a.is_final && <span className="badge st-closed">τελική</span>}
-                  </div>
-                  {a.description && <div className="timeline-desc">{a.description}</div>}
-                  {a.result && <div className="timeline-result">→ {a.result}</div>}
-                  {a.notes && <div className="timeline-notes">{a.notes}</div>}
-                  {a.next_action_at && (
-                    <div className="timeline-next">
-                      ⏰ επόμενη ενέργεια: {fmtDateTime(a.next_action_at)}
-                    </div>
-                  )}
-                </div>
-              </li>
+              <ActionItem
+                key={a.id}
+                action={a}
+                updateAction={updateAction}
+                deleteAction={deleteAction}
+              />
             ))}
           </ol>
         )}
