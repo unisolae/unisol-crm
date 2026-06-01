@@ -138,13 +138,18 @@ export default function CalendarClient({ events }) {
       </div>
 
       <div className="cal-side card">
-        <h2 className="cal-side-title">
-          {new Date(selected).toLocaleDateString('el-GR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          })}
-        </h2>
+        <div className="cal-side-head">
+          <h2 className="cal-side-title">
+            {new Date(selected).toLocaleDateString('el-GR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </h2>
+          <Link className="btn-inline" href="/inbox/new">
+            + Νέα εκκρεμότητα
+          </Link>
+        </div>
 
         {selectedEvents.length === 0 ? (
           <div className="dash-empty">Καμία εγγραφή αυτή την ημέρα.</div>
