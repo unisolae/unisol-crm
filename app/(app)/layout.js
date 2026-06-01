@@ -25,12 +25,19 @@ export default async function AppLayout({ children }) {
     .eq('id', user.id)
     .single();
 
+  const { count: initialUnread } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_read', false);
+
   return (
     <>
       <TopBar
         fullName={profile?.full_name ?? user.email}
         companyName={profile?.companies?.name ?? 'Unisol'}
         roleLabel={ROLE_LABELS[profile?.role] ?? ''}
+        initialUnread={initialUnread ?? 0}
       />
       {children}
     </>

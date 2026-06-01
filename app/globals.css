@@ -1146,3 +1146,58 @@ h3,
   background: var(--accent);
   color: #fff;
 }
+
+/* Notification badge στο nav (Εισερχόμενα) */
+.nav-inbox {
+  position: relative;
+}
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Γρήγορη σύνδεση μηνύματος με lead */
+.chip-action {
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.chip-action:hover { background: var(--cream); }
+.chip-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.link-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.link-picker select {
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  max-width: 280px;
+}
+.link-cancel {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 2px 4px;
+}

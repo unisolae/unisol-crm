@@ -131,3 +131,32 @@ export async function convertToAction(id) {
   revalidatePath(`/leads/${msg.lead_id}`);
   return { ok: true };
 }
+
+// --- Σήμανση όλων των notifications μου ως διαβασμένα -------------------------
+// Καλείται όταν ανοίγω το inbox, ώστε να μηδενίζει το badge.
+export async function markAllNotificationsRead() {
+  const supabase = await createClient();
+  const me = await currentUserId(supabase);
+  if (!me) return { ok: false };
+  await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', me)
+    .eq('is_read', false);
+  return { ok: true };
+}
+
+// --- Σύνδεση υπάρχοντος μηνύματος με lead ------------------------------------
+// Ο πωλητής συνδέει ένα μήνυμα (που δεν είχε lead) με ένα από τα leads του.
+export async function linkMessageToLead(id, leadId) {
+  const supabase = await createClient();
+  const lead = clean(leadId);
+  if (!lead) return { error: 'Δεν επιλέχθηκε lead.' };
+  const { error } = await supabase
+    .from('messages')
+    .update({ lead_id: lead })
+    .eq('id', id);
+  if (error) return { error: error.message };
+  revalidatePath('/inbox');
+  return { ok: true };
+}

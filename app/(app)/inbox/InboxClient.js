@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { MESSAGE_TYPE, MESSAGE_STATUS, RECIPIENT_GROUP } from '@/lib/labels';
-import { completeMessage, claimMessage, convertToAction } from './actions';
+import { completeMessage, claimMessage, convertToAction, linkMessageToLead } from './actions';
 
 const TYPE_CLS = {
   message: 'tag-message',
@@ -46,12 +46,13 @@ function boxOf(m, me) {
   return 'all';
 }
 
-export default function InboxClient({ messages, me }) {
+export default function InboxClient({ messages, me, myLeads = [] }) {
   const [box, setBox] = useState('in');
   const [statusFilter, setStatusFilter] = useState('open'); // open = εκτός done/cancelled
   const [sortBy, setSortBy] = useState('urgency');
   const [pending, start] = useTransition();
   const [rows, setRows] = useState(messages);
+  const [linkingId, setLinkingId] = useState(null); // ποιο μήνυμα συνδέεται τώρα
 
   function runAction(fn, id) {
     start(async () => {
@@ -68,6 +69,31 @@ export default function InboxClient({ messages, me }) {
             : m
         )
       );
+    });
+  }
+
+  function doLink(messageId, leadId) {
+    const lead = myLeads.find((l) => l.id === leadId);
+    start(async () => {
+      const res = await linkMessageToLead(messageId, leadId);
+      if (res?.error) {
+        alert('Σφάλμα: ' + res.error);
+        return;
+      }
+      setRows((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                lead_id: leadId,
+                lead: lead
+                  ? { project_desc: lead.project_desc, city: lead.city }
+                  : m.lead,
+              }
+            : m
+        )
+      );
+      setLinkingId(null);
     });
   }
 
@@ -174,6 +200,42 @@ export default function InboxClient({ messages, me }) {
                     <Link className="chip chip-link" href={`/leads/${m.lead_id}`}>
                       {m.lead.project_desc || 'lead'}
                     </Link>
+                  )}
+                  {!m.lead_id && box !== 'out' && (
+                    linkingId === m.id ? (
+                      <span className="link-picker">
+                        <select
+                          autoFocus
+                          defaultValue=""
+                          disabled={pending}
+                          onChange={(e) => e.target.value && doLink(m.id, e.target.value)}
+                        >
+                          <option value="">— διάλεξε από τα leads μου —</option>
+                          {myLeads.map((l) => (
+                            <option key={l.id} value={l.id}>
+                              {(l.project_desc || 'lead').slice(0, 45)}
+                              {l.city ? ` — ${l.city}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          className="link-cancel"
+                          onClick={() => setLinkingId(null)}
+                          aria-label="Άκυρο"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        className="chip chip-action"
+                        onClick={() => setLinkingId(m.id)}
+                        disabled={myLeads.length === 0}
+                        title={myLeads.length === 0 ? 'Δεν έχεις αναλάβει leads' : 'Σύνδεση με lead'}
+                      >
+                        + Σύνδεση με lead
+                      </button>
+                    )
                   )}
                   {m.third_party_phone && (
                     <span className="chip">☎ {m.third_party_phone}</span>

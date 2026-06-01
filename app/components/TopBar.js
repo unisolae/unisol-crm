@@ -1,12 +1,33 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export default function TopBar({ fullName, companyName, roleLabel }) {
+export default function TopBar({ fullName, companyName, roleLabel, initialUnread = 0 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [unread, setUnread] = useState(initialUnread);
+
+  const refreshCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications/count', { cache: 'no-store' });
+      if (res.ok) {
+        const { count } = await res.json();
+        setUnread(count ?? 0);
+      }
+    } catch {
+      // σιωπηλά — δεν θέλουμε να σπάει το TopBar αν πέσει το δίκτυο
+    }
+  }, []);
+
+  // Polling κάθε 45 δευτ. + μία φορά σε κάθε αλλαγή σελίδας
+  useEffect(() => {
+    refreshCount();
+    const id = setInterval(refreshCount, 45000);
+    return () => clearInterval(id);
+  }, [refreshCount, pathname]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -33,8 +54,12 @@ export default function TopBar({ fullName, companyName, roleLabel }) {
           <Link className={isActive('/leads') ? 'nav-link active' : 'nav-link'} href="/leads">
             Leads
           </Link>
-          <Link className={isActive('/inbox') ? 'nav-link active' : 'nav-link'} href="/inbox">
+          <Link
+            className={isActive('/inbox') ? 'nav-link active nav-inbox' : 'nav-link nav-inbox'}
+            href="/inbox"
+          >
             Εισερχόμενα
+            {unread > 0 && <span className="nav-badge">{unread > 99 ? '99+' : unread}</span>}
           </Link>
           <Link className={isActive('/import') ? 'nav-link active' : 'nav-link'} href="/import">
             Εισαγωγή

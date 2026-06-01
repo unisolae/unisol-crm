@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import InboxClient from './InboxClient';
+import { markAllNotificationsRead } from './actions';
 
 export default async function InboxPage() {
   const supabase = await createClient();
@@ -7,6 +8,10 @@ export default async function InboxPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Μόλις ανοίξει το inbox, σημειώνουμε τα notifications μου ως διαβασμένα
+  // (μηδενίζει το badge στο TopBar).
+  await markAllNotificationsRead();
 
   // Φέρνουμε όλα τα μηνύματα της εταιρείας (Εκδοχή Β: πλήρης ορατότητα,
   // για αποφυγή διπλότυπων ειδοποιήσεων). Ο διαχωρισμός σε προβολές
@@ -31,6 +36,15 @@ export default async function InboxPage() {
     .eq('id', user.id)
     .single();
 
+  // "Τα leads μου" — όσα έχω αναλάβει, για γρήγορη σύνδεση μηνύματος.
+  // Πρώτα τα δικά μου· αν θέλει άλλα, υπάρχει αναζήτηση στον client.
+  const { data: myLeads } = await supabase
+    .from('leads')
+    .select('id, project_desc, city')
+    .eq('salesperson_id', user.id)
+    .order('updated_at', { ascending: false })
+    .limit(100);
+
   return (
     <div className="page">
       <div className="page-head with-action">
@@ -40,7 +54,7 @@ export default async function InboxPage() {
         </div>
       </div>
 
-      <InboxClient messages={messages ?? []} me={me ?? null} />
+      <InboxClient messages={messages ?? []} me={me ?? null} myLeads={myLeads ?? []} />
     </div>
   );
 }
