@@ -1398,3 +1398,169 @@ h3,
   color: var(--accent);
   margin-top: 4px;
 }
+
+/* ============================================================
+   Ημερολόγιο (Calendar)
+   ============================================================ */
+.cal-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.cal-main { padding: 16px 18px; }
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.cal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 180px;
+}
+.cal-today-btn { margin-left: auto; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-weekdays { margin-bottom: 4px; }
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 4px 0;
+}
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 5px 6px;
+  gap: 4px;
+  font: inherit;
+}
+.cal-cell:hover { background: var(--cream); }
+.cal-empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+.cal-daynum {
+  font-size: 13px;
+  color: var(--text);
+}
+.cal-today {
+  border-color: var(--accent);
+  border-width: 1.5px;
+}
+.cal-today .cal-daynum {
+  color: var(--accent);
+  font-weight: 700;
+}
+.cal-selected {
+  background: var(--cream);
+  box-shadow: inset 0 0 0 1.5px var(--ink-2);
+}
+.cal-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: auto;
+}
+.cal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.cal-dot-task { background: #378add; }
+.cal-dot-callback { background: #c9683b; }
+.cal-dot-reminder { background: #d6a829; }
+.cal-dot-action { background: #1d9e75; }
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--muted);
+}
+.cal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Πλαϊνή λίστα ημέρας */
+.cal-side { padding: 16px 18px; }
+.cal-side-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+.cal-list { list-style: none; padding: 0; margin: 0; }
+.cal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.cal-item:first-child { border-top: none; }
+.cal-item .cal-dot { margin-top: 5px; }
+.cal-item-done { opacity: 0.55; }
+.cal-item-done .cal-item-title { text-decoration: line-through; }
+.cal-item-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+.cal-item-time {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cal-item-title { font-size: 14px; }
+
+@media (max-width: 720px) {
+  .cal-wrap { grid-template-columns: 1fr; }
+}
+
+/* Εργαλεία επεξεργασίας στο χρονολόγιο ενεργειών */
+.timeline-tools {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 6px;
+}
+.cal-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.cal-side-head .cal-side-title { margin-bottom: 0; }
