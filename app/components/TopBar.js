@@ -54,6 +54,9 @@ export default function TopBar({ fullName, companyName, roleLabel, initialUnread
           <Link className={isActive('/leads') ? 'nav-link active' : 'nav-link'} href="/leads">
             Leads
           </Link>
+          <Link className={isActive('/actions') ? 'nav-link active' : 'nav-link'} href="/actions">
+            Ενέργειες
+          </Link>
           <Link
             className={isActive('/inbox') ? 'nav-link active nav-inbox' : 'nav-link nav-inbox'}
             href="/inbox"

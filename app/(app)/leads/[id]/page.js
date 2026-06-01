@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { updateLead } from '../actions';
+import { createAction } from '@/app/(app)/actions/actions';
 import LeadEditForm from './LeadEditForm';
+import ActionForm from './ActionForm';
 
 const STATUS = {
   unknown: { label: 'Άγνωστη', cls: 'st-unknown' },
@@ -39,8 +41,19 @@ export default async function LeadDetail({ params }) {
     .eq('is_salesperson', true)
     .order('full_name');
 
+  // Ενέργειες αυτού του lead (χρονολόγιο)
+  const { data: leadActions } = await supabase
+    .from('actions')
+    .select(
+      'id, description, result, is_final, next_action_at, notes, acted_at, ' +
+        'salesperson:profiles!actions_salesperson_id_fkey(name:full_name)'
+    )
+    .eq('lead_id', id)
+    .order('acted_at', { ascending: false });
+
   const st = STATUS[lead.crm_status] ?? STATUS.unknown;
   const updateAction = updateLead.bind(null, id);
+  const addAction = createAction.bind(null, id);
 
   const address = [lead.address_street, lead.address_number].filter(Boolean).join(' ');
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('el-GR') : null);
@@ -94,6 +107,42 @@ export default async function LeadDetail({ params }) {
           <LeadEditForm lead={lead} salespeople={salespeople ?? []} action={updateAction} />
         </section>
       </div>
+
+      <section className="card actions-card">
+        <div className="actions-head">
+          <h2>Χρονολόγιο ενεργειών</h2>
+          <ActionForm action={addAction} />
+        </div>
+
+        {(leadActions ?? []).length === 0 ? (
+          <div className="dash-empty">Καμία ενέργεια ακόμη. Πρόσθεσε την πρώτη.</div>
+        ) : (
+          <ol className="timeline">
+            {leadActions.map((a) => (
+              <li key={a.id} className="timeline-item">
+                <span className="timeline-dot" aria-hidden="true" />
+                <div className="timeline-body">
+                  <div className="timeline-top">
+                    <span className="timeline-when">{fmtDateTime(a.acted_at)}</span>
+                    {a.salesperson?.name && (
+                      <span className="timeline-who">· {a.salesperson.name}</span>
+                    )}
+                    {a.is_final && <span className="badge st-closed">τελική</span>}
+                  </div>
+                  {a.description && <div className="timeline-desc">{a.description}</div>}
+                  {a.result && <div className="timeline-result">→ {a.result}</div>}
+                  {a.notes && <div className="timeline-notes">{a.notes}</div>}
+                  {a.next_action_at && (
+                    <div className="timeline-next">
+                      ⏰ επόμενη ενέργεια: {fmtDateTime(a.next_action_at)}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
     </div>
   );
 }
