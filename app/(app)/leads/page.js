@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import LeadsFilters from './LeadsFilters';
+import LeadsTabs from './LeadsTabs';
 import { InlineStatus, InlineSalesperson, InlineSize, InlinePriority, InlineType } from './InlineEdit';
 
 export default async function LeadsPage({ searchParams }) {
@@ -19,24 +20,49 @@ export default async function LeadsPage({ searchParams }) {
     .eq('is_salesperson', true)
     .order('full_name');
 
-  let query = supabase
-    .from('leads')
-    .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
-    .order('created_at', { ascending: false })
-    .limit(300);
-
-  if (statusList.length) query = query.in('crm_status', statusList);
-  if (salesList.length) query = query.in('salesperson_id', salesList);
-  if (prioList.length) query = query.in('priority', prioList);
-  if (typeList.length) query = query.in('lead_type', typeList);
-  if (q) {
-    const like = `%${q}%`;
-    query = query.or(
-      `project_desc.ilike.${like},address_street.ilike.${like},city.ilike.${like},municipality.ilike.${like},engineer.ilike.${like},associate.ilike.${like},external_ref.ilike.${like}`
-    );
+  // Εφαρμόζει όλα τα φίλτρα ΕΚΤΟΣ από το status (για τους μετρητές των tabs)
+  function applyBaseFilters(query) {
+    if (salesList.length) query = query.in('salesperson_id', salesList);
+    if (prioList.length) query = query.in('priority', prioList);
+    if (typeList.length) query = query.in('lead_type', typeList);
+    if (q) {
+      const like = `%${q}%`;
+      query = query.or(
+        `project_desc.ilike.${like},address_street.ilike.${like},city.ilike.${like},municipality.ilike.${like},engineer.ilike.${like},associate.ilike.${like},external_ref.ilike.${like}`
+      );
+    }
+    return query;
   }
 
+  let query = applyBaseFilters(
+    supabase
+      .from('leads')
+      .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
+      .order('created_at', { ascending: false })
+      .limit(300)
+  );
+  if (statusList.length) query = query.in('crm_status', statusList);
+
   const { data: leads } = await query;
+
+  // Μετρητές ανά κατάσταση (σέβονται τα υπόλοιπα φίλτρα, όχι το status)
+  async function countFor(status) {
+    let cq = applyBaseFilters(
+      supabase.from('leads').select('*', { count: 'exact', head: true })
+    );
+    if (status) cq = cq.eq('crm_status', status);
+    const { count } = await cq;
+    return count ?? 0;
+  }
+
+  const [cAll, cActive, cUnknown, cClosed, cNegative] = await Promise.all([
+    countFor(null),
+    countFor('active'),
+    countFor('unknown'),
+    countFor('closed'),
+    countFor('negative'),
+  ]);
+  const counts = { all: cAll, active: cActive, unknown: cUnknown, closed: cClosed, negative: cNegative };
 
   return (
     <div className="page">
@@ -49,6 +75,8 @@ export default async function LeadsPage({ searchParams }) {
           + Νέο lead
         </Link>
       </div>
+
+      <LeadsTabs counts={counts} />
 
       <LeadsFilters salespeople={salespeople ?? []} />
 
