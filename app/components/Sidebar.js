@@ -48,32 +48,58 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
     } catch {}
   }, []);
 
-  // Realtime: ακούμε αλλαγές στον πίνακα notifications για ΤΟΝ χρήστη μου.
-  // Όταν έρθει νέα ή αλλάξει (read), ανανεώνουμε τον μετρητή ακαριαία.
+  // Realtime + polling safety net.
+  // Το Realtime δίνει ακαριαία ενημέρωση· το polling (κάθε 25s) πιάνει ό,τι
+  // τυχόν ξεφύγει αν πέσει το WebSocket. Έτσι δεν χρειάζεται ποτέ χειροκίνητο refresh.
   useEffect(() => {
     if (!userId) return;
     const supabase = createClient();
-    const channel = supabase
-      .channel('notif-' + userId)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        () => refreshCount()
-      )
-      .subscribe();
+    let channel;
 
-    // Μία ανανέωση στο mount + όταν επιστρέφει εστίαση στο παράθυρο
-    refreshCount();
+    function subscribe() {
+      channel = supabase
+        .channel('notif-' + userId)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`,
+          },
+          () => refreshCount()
+        )
+        .subscribe((status) => {
+          // Αν το κανάλι πέσει/κλείσει, ξαναπροσπαθούμε σύνδεση
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            setTimeout(() => {
+              supabase.removeChannel(channel);
+              subscribe();
+            }, 3000);
+          }
+        });
+    }
+    subscribe();
+
+    // Safety net: polling κάθε 25 δευτ.
+    const pollId = setInterval(refreshCount, 25000);
+
+    // Ανανέωση όταν η καρτέλα ξαναγίνεται ορατή (background → foreground)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshCount();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    // Ανανέωση όταν επιστρέφει εστίαση στο παράθυρο
     const onFocus = () => refreshCount();
     window.addEventListener('focus', onFocus);
 
+    refreshCount(); // αρχική ανανέωση στο mount
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
+      clearInterval(pollId);
+      document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onFocus);
     };
   }, [userId, refreshCount]);
@@ -149,13 +175,16 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
         </nav>
 
         <div className="sb-foot">
-          <div className="sb-av">{initials}</div>
-          <div className="sb-who">
-            <b>{fullName}</b>
-            <span>{roleLabel}</span>
+          <div className="sb-foot-user">
+            <div className="sb-av">{initials}</div>
+            <div className="sb-who">
+              <b>{fullName}</b>
+              <span>{roleLabel}</span>
+            </div>
           </div>
-          <button className="sb-logout" onClick={handleLogout} aria-label="Αποσύνδεση" title="Αποσύνδεση">
+          <button className="sb-logout" onClick={handleLogout}>
             <i className="ti ti-logout" aria-hidden="true" />
+            Αποσύνδεση
           </button>
         </div>
       </aside>
