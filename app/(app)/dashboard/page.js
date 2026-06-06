@@ -1,38 +1,13 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { MESSAGE_TYPE } from '@/lib/labels';
+import DashboardTasks from './DashboardTasks';
 
-const STATUS_LABELS = {
-  unknown: 'Άγνωστη',
-  active: 'Ενεργή',
-  closed: 'Κλειστή',
-  negative: 'Αρνητική',
-};
-
-const TYPE_CLS = {
-  message: 'tag-message',
-  callback: 'tag-callback',
-  reminder: 'tag-reminder',
-  follow_up: 'tag-followup',
-};
-
-function fmtDue(due_at) {
-  if (!due_at) return 'χωρίς προθεσμία';
-  return new Date(due_at).toLocaleString('el-GR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-// Ομαδοποίηση εκκρεμοτήτων κατά επείγον
-function bucketOf(due_at) {
-  if (!due_at) return 'future';
-  const mins = (new Date(due_at).getTime() - Date.now()) / 60000;
-  if (mins < 0) return 'overdue';
-  if (mins < 60 * 24) return 'today';
-  return 'future';
+function startOfWeek() {
+  const d = new Date();
+  const day = (d.getDay() + 6) % 7; // Δευτέρα = 0
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
 export default async function Dashboard() {
@@ -42,31 +17,41 @@ export default async function Dashboard() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+
+  const firstName = (me?.full_name || '').split(' ').slice(-1)[0] || '';
+
+  // --- Μετρήσεις leads ---
   const { count: totalLeads } = await supabase
     .from('leads')
     .select('*', { count: 'exact', head: true });
-
   const { count: activeLeads } = await supabase
     .from('leads')
     .select('*', { count: 'exact', head: true })
     .eq('crm_status', 'active');
-
   const { count: unknownLeads } = await supabase
     .from('leads')
     .select('*', { count: 'exact', head: true })
     .eq('crm_status', 'unknown');
+  const { count: unassignedLeads } = await supabase
+    .from('leads')
+    .select('*', { count: 'exact', head: true })
+    .is('salesperson_id', null);
 
   const { data: pipeline } = await supabase
     .from('leads')
     .select('lead_size_eur')
     .not('lead_size_eur', 'is', null);
-
   const pipelineSum = (pipeline ?? []).reduce(
     (acc, r) => acc + Number(r.lead_size_eur || 0),
     0
   );
 
-  // --- Οι εκκρεμότητές μου: ανοιχτά μηνύματα όπου είμαι ο παραλήπτης ---
+  // --- Οι εκκρεμότητές μου (ανοιχτά μηνύματα όπου είμαι παραλήπτης) ---
   const { data: myTasks } = await supabase
     .from('messages')
     .select(
@@ -80,90 +65,114 @@ export default async function Dashboard() {
     .limit(50);
 
   const tasks = myTasks ?? [];
-  const groups = {
-    overdue: tasks.filter((t) => bucketOf(t.due_at) === 'overdue'),
-    today: tasks.filter((t) => bucketOf(t.due_at) === 'today'),
-    future: tasks.filter((t) => bucketOf(t.due_at) === 'future'),
-  };
 
-  const SECTIONS = [
-    { key: 'overdue', label: 'Εκπρόθεσμα', cls: 'sec-overdue' },
-    { key: 'today', label: 'Σήμερα', cls: 'sec-today' },
-    { key: 'future', label: 'Προσεχώς', cls: 'sec-future' },
+  // --- "Με μια ματιά" νούμερα ---
+  const { count: myActionsWeek } = await supabase
+    .from('actions')
+    .select('*', { count: 'exact', head: true })
+    .eq('salesperson_id', user.id)
+    .gte('acted_at', startOfWeek());
+
+  const { count: unreadMsgs } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_read', false);
+
+  // εκπρόθεσμα + σήμερα (από τα δικά μου tasks)
+  const now = Date.now();
+  const overdueCount = tasks.filter(
+    (t) => t.due_at && new Date(t.due_at).getTime() < now
+  ).length;
+  const todayCount = tasks.filter((t) => {
+    if (!t.due_at) return false;
+    const mins = (new Date(t.due_at).getTime() - now) / 60000;
+    return mins >= 0 && mins < 60 * 24;
+  }).length;
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Καλημέρα';
+    if (h < 18) return 'Καλό απόγευμα';
+    return 'Καλησπέρα';
+  })();
+
+  const summaryBits = [];
+  if (overdueCount > 0) summaryBits.push(`${overdueCount} εκπρόθεσμες εκκρεμότητες`);
+  if (activeLeads) summaryBits.push(`${activeLeads} ενεργά leads`);
+  const summary = summaryBits.length
+    ? `Έχεις ${summaryBits.join(' και ')}.`
+    : 'Δεν έχεις εκκρεμότητες αυτή τη στιγμή.';
+
+  const pct = totalLeads ? Math.round((activeLeads / totalLeads) * 100) : 0;
+  const unkPct = totalLeads ? Math.round((unknownLeads / totalLeads) * 100) : 0;
+
+  const STATS = [
+    { label: 'Σύνολο leads', icon: 'ti-target', value: totalLeads ?? 0, barW: 100, barC: '#1d4a43' },
+    { label: 'Ενεργά', icon: 'ti-flame', value: activeLeads ?? 0, sub: `${pct}% του συνόλου`, subC: '#0f6e56', barW: pct, barC: '#1d9e75' },
+    { label: 'Αδιερεύνητα', icon: 'ti-search', value: unknownLeads ?? 0, sub: 'χρειάζονται έλεγχο', subC: '#c9683b', barW: unkPct, barC: '#c9683b' },
+    { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#6b7670', barW: 70, barC: '#d6a829' },
+  ];
+
+  const GLANCE = [
+    { icon: 'ti-checkbox', bg: '#dcefe4', fg: '#0f6e56', n: myActionsWeek ?? 0, text: 'ενέργειες αυτή την εβδομάδα' },
+    { icon: 'ti-clock', bg: '#faeeda', fg: '#633806', n: todayCount, text: 'εκκρεμότητες λήγουν σήμερα' },
+    { icon: 'ti-inbox', bg: '#dfe9f6', fg: '#1c4c7c', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα' },
+    { icon: 'ti-user-plus', bg: '#f3eee4', fg: '#6b7670', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα' },
   ];
 
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Επισκόπηση</h1>
-        <p>Καλωσήρθες στο σύστημα διαχείρισης ευκαιριών πωλήσεων.</p>
+        <h1>
+          {greeting}
+          {firstName ? `, ${firstName}` : ''}
+        </h1>
+        <p>{summary}</p>
       </div>
 
       <div className="stat-grid">
-        <div className="stat">
-          <div className="label">Σύνολο leads</div>
-          <div className="value">{totalLeads ?? 0}</div>
-        </div>
-        <div className="stat">
-          <div className="label">Ενεργά</div>
-          <div className="value">{activeLeads ?? 0}</div>
-          <div className="hint">{STATUS_LABELS.active}</div>
-        </div>
-        <div className="stat">
-          <div className="label">Αδιερεύνητα</div>
-          <div className="value">{unknownLeads ?? 0}</div>
-          <div className="hint">Χρειάζονται έλεγχο</div>
-        </div>
-        <div className="stat">
-          <div className="label">Αξία pipeline</div>
-          <div className="value">{pipelineSum.toLocaleString('el-GR')}€</div>
-        </div>
+        {STATS.map((s) => (
+          <div key={s.label} className="stat stat-rich">
+            <i className={`ti ${s.icon} stat-ic`} aria-hidden="true" />
+            <div className="label">{s.label}</div>
+            <div className="value">{s.value}</div>
+            {s.sub && <div className="stat-sub" style={{ color: s.subC }}>{s.sub}</div>}
+            <div className="stat-bar">
+              <i style={{ width: `${s.barW}%`, background: s.barC }} />
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="dash-tasks card">
-        <div className="dash-tasks-head">
-          <h2>Οι εκκρεμότητές μου</h2>
-          <Link className="btn-inline" href="/inbox">
-            Όλα τα εισερχόμενα →
-          </Link>
+      <div className="dash-grid">
+        <div className="dash-tasks card">
+          <div className="dash-tasks-head">
+            <h2>Οι εκκρεμότητές μου</h2>
+            <Link className="btn-inline" href="/inbox">
+              Όλα τα εισερχόμενα →
+            </Link>
+          </div>
+          <DashboardTasks tasks={tasks} />
         </div>
 
-        {tasks.length === 0 ? (
-          <div className="dash-empty">Δεν έχεις ανοιχτές εκκρεμότητες. 👍</div>
-        ) : (
-          SECTIONS.map((sec) =>
-            groups[sec.key].length === 0 ? null : (
-              <div key={sec.key} className="dash-sec">
-                <div className={`dash-sec-label ${sec.cls}`}>
-                  {sec.label} <span className="dash-sec-cnt">{groups[sec.key].length}</span>
+        <div className="dash-glance card">
+          <div className="dash-tasks-head">
+            <h2>Με μια ματιά</h2>
+          </div>
+          <div className="glance-list">
+            {GLANCE.map((g, i) => (
+              <div key={i} className="glance-row">
+                <span className="glance-ic" style={{ background: g.bg, color: g.fg }}>
+                  <i className={`ti ${g.icon}`} aria-hidden="true" />
+                </span>
+                <div>
+                  <b>{g.n}</b> {g.text}
                 </div>
-                {groups[sec.key].map((t) => (
-                  <Link key={t.id} href="/inbox" className="dash-task">
-                    <span className={`msg-tag ${TYPE_CLS[t.type] || ''}`}>
-                      {MESSAGE_TYPE[t.type] || t.type}
-                    </span>
-                    <span className="dash-task-body">{t.body || '—'}</span>
-                    <span className="dash-task-meta">
-                      {t.lead?.project_desc ? (
-                        <span className="chip">{t.lead.project_desc.slice(0, 30)}</span>
-                      ) : null}
-                      {t.sender?.name && <span className="chip">από {t.sender.name}</span>}
-                    </span>
-                    <span className={`dash-task-due bucket-${bucketOf(t.due_at)}`}>
-                      {fmtDue(t.due_at)}
-                    </span>
-                  </Link>
-                ))}
               </div>
-            )
-          )
-        )}
-      </div>
-
-      <div className="cta-row">
-        <Link className="btn-inline" href="/leads">
-          Δες όλα τα leads →
-        </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
