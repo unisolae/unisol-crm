@@ -1896,3 +1896,49 @@ h3,
   background: var(--cream);
   border: 1px solid var(--line-soft);
 }
+
+/* ============================================================
+   Leads — status tabs (γρήγορο φίλτρο κατάστασης)
+   ============================================================ */
+.lead-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.lead-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.lead-tab:hover { color: var(--ink); }
+.lead-tab.on {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.lead-tab-cnt {
+  font-size: 11px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+.lead-tab.on .lead-tab-cnt {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
