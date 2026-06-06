@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import LeadsFilters from './LeadsFilters';
 import LeadsTabs from './LeadsTabs';
+import LeadsScope from './LeadsScope';
 import { InlineStatus, InlineSalesperson, InlineSize, InlinePriority, InlineType } from './InlineEdit';
 
 export default async function LeadsPage({ searchParams }) {
@@ -11,8 +12,14 @@ export default async function LeadsPage({ searchParams }) {
   const salesList = (sp.sp ?? '').split(',').filter(Boolean);
   const prioList = (sp.prio ?? '').split(',').filter(Boolean);
   const typeList = (sp.type ?? '').split(',').filter(Boolean);
+  // scope: 'mine' (δικά μου + αδιάθετα, προεπιλογή) | 'all'
+  const scope = sp.scope === 'all' ? 'all' : 'mine';
 
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: salespeople } = await supabase
     .from('profiles')
@@ -20,8 +27,23 @@ export default async function LeadsPage({ searchParams }) {
     .eq('is_salesperson', true)
     .order('full_name');
 
+  // querystring για να το περνάμε στους συνδέσμους (διατήρηση context στο "πίσω")
+  const ctx = new URLSearchParams();
+  if (q) ctx.set('q', q);
+  if (sp.status) ctx.set('status', sp.status);
+  if (sp.sp) ctx.set('sp', sp.sp);
+  if (sp.prio) ctx.set('prio', sp.prio);
+  if (sp.type) ctx.set('type', sp.type);
+  if (sp.scope) ctx.set('scope', sp.scope);
+  const ctxStr = ctx.toString();
+
   // Εφαρμόζει όλα τα φίλτρα ΕΚΤΟΣ από το status (για τους μετρητές των tabs)
   function applyBaseFilters(query) {
+    // scope: "δικά μου" = ανατεθειμένα σε μένα Ή αδιάθετα
+    if (scope === 'mine') {
+      query = query.or(`salesperson_id.eq.${user.id},salesperson_id.is.null`);
+    }
+    // Αν ο χρήστης επιλέξει ρητά πωλητές από το φίλτρο, αυτό υπερισχύει
     if (salesList.length) query = query.in('salesperson_id', salesList);
     if (prioList.length) query = query.in('priority', prioList);
     if (typeList.length) query = query.in('lead_type', typeList);
@@ -76,6 +98,8 @@ export default async function LeadsPage({ searchParams }) {
         </Link>
       </div>
 
+      <LeadsScope current={scope} />
+
       <LeadsTabs counts={counts} />
 
       <LeadsFilters salespeople={salespeople ?? []} />
@@ -99,7 +123,7 @@ export default async function LeadsPage({ searchParams }) {
               return (
                 <tr key={l.id} className="row-link">
                   <td className="cell-main">
-                    <Link href={`/leads/${l.id}`}>
+                    <Link href={`/leads/${l.id}${ctxStr ? `?from=${encodeURIComponent(ctxStr)}` : ''}`}>
                       {l.project_desc || '—'}
                     </Link>
                     {l.engineer && <span className="cell-sub">{l.engineer.split('(')[0].trim()}</span>}
