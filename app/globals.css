@@ -1663,6 +1663,11 @@ h3,
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px 16px;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sb-foot-user {
+  display: flex;
   align-items: center;
   gap: 10px;
 }
@@ -1691,15 +1696,22 @@ h3,
 }
 .sb-who span { font-size: 11px; color: #6e827b; }
 .sb-logout {
-  background: none;
-  border: none;
-  color: #8a9a93;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cdd8d3;
   cursor: pointer;
-  padding: 6px;
-  font-size: 18px;
-  border-radius: 6px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 8px;
 }
-.sb-logout:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.sb-logout:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.sb-logout i { font-size: 16px; }
 
 /* Mobile: hamburger + slide-in */
 .sb-burger {
