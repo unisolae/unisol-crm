@@ -2,14 +2,14 @@
   --ink: #14342f;
   --ink-2: #1d4a43;
   --ink-3: #0d2622;
-  --cream: #f4f1ea;
-  --paper: #faf8f3;
+  --cream: #f1f4f3;
+  --paper: #ffffff;
   --accent: #c9683b;
   --accent-soft: #e8a07f;
   --text: #1f2421;
   --muted: #6b7670;
-  --line: rgba(20, 52, 47, 0.14);
-  --line-soft: rgba(20, 52, 47, 0.08);
+  --line: rgba(20, 52, 47, 0.20);
+  --line-soft: rgba(20, 52, 47, 0.10);
   --danger: #b23a3a;
   --radius: 12px;
 }
@@ -27,7 +27,7 @@ body {
 
 body {
   font-family: var(--font-body), system-ui, sans-serif;
-  background: var(--paper);
+  background: #f6f8f7;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
@@ -1857,4 +1857,42 @@ h3,
 
 @media (max-width: 860px) {
   .dash-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Λευκό θέμα — καθαρές κάρτες, ευδιάκριτα περιγράμματα
+   ============================================================ */
+.card,
+.stat {
+  border-color: var(--line);
+  box-shadow: 0 1px 3px rgba(20, 52, 47, 0.05);
+}
+
+/* Πιο ευδιάκριτα tabs */
+.seg-tabs {
+  border: 1px solid var(--line-soft);
+}
+.inbox-tabs {
+  border-bottom: 1px solid var(--line);
+}
+
+/* Περισσότερο διάστιχο στις εκκρεμότητες (dashboard + inbox) */
+.dash-task {
+  padding: 13px 8px;
+  gap: 12px;
+}
+.dash-task + .dash-task {
+  border-top: 1px solid var(--line-soft);
+}
+.dash-task-body {
+  line-height: 1.5;
+}
+.inbox-row {
+  padding: 15px 6px;
+}
+
+/* Τα chips/μικρο-ετικέτες να ξεχωρίζουν στο λευκό */
+.chip {
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
 }
