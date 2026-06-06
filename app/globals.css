@@ -1756,3 +1756,105 @@ h3,
   }
   .app-main .page { padding: 64px 20px 28px; }
 }
+
+/* ============================================================
+   Dashboard redesign — rich stats, glance, task tabs
+   ============================================================ */
+.stat-rich {
+  position: relative;
+  overflow: hidden;
+}
+.stat-ic {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-size: 22px;
+  opacity: 0.16;
+  color: var(--ink);
+}
+.stat-sub {
+  font-size: 11px;
+  margin-top: 3px;
+}
+.stat-bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 10px;
+  background: #eee4d4;
+  overflow: hidden;
+}
+.stat-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+.dash-grid .dash-tasks { margin-top: 0; }
+
+.dash-glance { padding: 16px 18px; }
+.glance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.glance-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 13px;
+  color: var(--text);
+}
+.glance-row b {
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.glance-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Segmented tabs (εκκρεμότητες) */
+.seg-tabs {
+  display: inline-flex;
+  background: var(--cream);
+  border-radius: 9px;
+  padding: 3px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.seg-tab {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 500;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+.seg-tab.on {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
