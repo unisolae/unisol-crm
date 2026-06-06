@@ -24,8 +24,10 @@ function Row({ label, value }) {
   );
 }
 
-export default async function LeadDetail({ params }) {
+export default async function LeadDetail({ params, searchParams }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const backHref = sp?.from ? `/leads?${decodeURIComponent(sp.from)}` : '/leads';
   const supabase = await createClient();
 
   const { data: lead } = await supabase
@@ -72,7 +74,7 @@ export default async function LeadDetail({ params }) {
   return (
     <div className="page">
       <div className="breadcrumb">
-        <Link href="/leads">← Πίσω στα leads</Link>
+        <Link href={backHref}>← Πίσω στα leads</Link>
       </div>
 
       <div className="page-head with-action">
