@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import FaviconBadge from './FaviconBadge';
 
 // Δομή πλοήγησης — ομαδοποιημένη σε ενότητες.
 // "soon: true" = οθόνη που δεν έχει χτιστεί ακόμα (σήμανση «σύντομα»).
@@ -129,6 +130,7 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
 
   return (
     <>
+      <FaviconBadge unread={unread} />
       <button
         className="sb-burger"
         onClick={() => setMobileOpen((v) => !v)}
