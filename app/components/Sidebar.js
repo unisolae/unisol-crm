@@ -50,37 +50,26 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
   }, []);
 
   // Realtime + polling safety net.
-  // Το Realtime δίνει ακαριαία ενημέρωση· το polling (κάθε 25s) πιάνει ό,τι
-  // τυχόν ξεφύγει αν πέσει το WebSocket. Έτσι δεν χρειάζεται ποτέ χειροκίνητο refresh.
+  // Το Realtime δίνει ακαριαία ενημέρωση· το polling (κάθε 25s) + visibility/focus
+  // πιάνουν ό,τι τυχόν ξεφύγει αν πέσει το WebSocket. Δεν χρειάζεται χειροκίνητο refresh.
   useEffect(() => {
     if (!userId) return;
     const supabase = createClient();
-    let channel;
 
-    function subscribe() {
-      channel = supabase
-        .channel('notif-' + userId)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${userId}`,
-          },
-          () => refreshCount()
-        )
-        .subscribe((status) => {
-          // Αν το κανάλι πέσει/κλείσει, ξαναπροσπαθούμε σύνδεση
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            setTimeout(() => {
-              supabase.removeChannel(channel);
-              subscribe();
-            }, 3000);
-          }
-        });
-    }
-    subscribe();
+    // Μοναδικό όνομα καναλιού ανά mount (αποφυγή σύγκρουσης σε logout/login)
+    const channel = supabase
+      .channel(`notif-${userId}-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => refreshCount()
+      )
+      .subscribe();
 
     // Safety net: polling κάθε 25 δευτ.
     const pollId = setInterval(refreshCount, 25000);
@@ -98,7 +87,7 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
     refreshCount(); // αρχική ανανέωση στο mount
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
       clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onFocus);
