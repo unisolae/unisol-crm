@@ -114,8 +114,21 @@ export default async function Dashboard() {
     { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#6b7670', barW: 70, barC: '#d6a829' },
   ];
 
+  // Προγραμματισμένες ενέργειές μου που είναι εκπρόθεσμες ή λήγουν σήμερα
+  const { data: myPlanned } = await supabase
+    .from('actions')
+    .select('scheduled_at')
+    .eq('salesperson_id', user.id)
+    .eq('status', 'planned')
+    .not('scheduled_at', 'is', null);
+  const plannedDueCount = (myPlanned ?? []).filter((a) => {
+    const mins = (new Date(a.scheduled_at).getTime() - Date.now()) / 60000;
+    return mins < 60 * 24; // εκπρόθεσμες + επόμενες 24 ώρες
+  }).length;
+
   const GLANCE = [
     { icon: 'ti-checkbox', bg: '#dcefe4', fg: '#0f6e56', n: myActionsWeek ?? 0, text: 'ενέργειες αυτή την εβδομάδα' },
+    { icon: 'ti-calendar-clock', bg: '#ece4f5', fg: '#5b3ba0', n: plannedDueCount, text: 'προγραμματισμένες ενέργειες λήγουν' },
     { icon: 'ti-clock', bg: '#faeeda', fg: '#633806', n: todayCount, text: 'εκκρεμότητες λήγουν σήμερα' },
     { icon: 'ti-inbox', bg: '#dfe9f6', fg: '#1c4c7c', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα' },
     { icon: 'ti-user-plus', bg: '#f3eee4', fg: '#6b7670', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα' },

@@ -2139,3 +2139,65 @@ h3,
   font-size: 13px;
   color: var(--muted);
 }
+
+/* ============================================================
+   ΕΝΕΡΓΕΙΕΣ — προγραμματισμένες / επαφές (Βήμα Β)
+   ============================================================ */
+
+/* Διακόπτης «Καταγραφή (έγινε) / Προγραμματισμός (θα γίνει)» */
+.af-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 12px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+.af-toggle button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.af-toggle button.on {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Badge «προγραμματισμένη» (μωβ) */
+.badge-planned {
+  background: #ece4f5;
+  color: #5b3ba0;
+}
+
+/* Κουκκίδα χρονολογίου για προγραμματισμένη ενέργεια */
+.timeline-dot.dot-planned {
+  background: #7a52c9;
+  box-shadow: 0 0 0 3px rgba(122, 82, 201, 0.15);
+}
+
+/* Κουμπί «Ολοκληρώθηκε» (accent) */
+.btn-mini.btn-mini-go {
+  border-color: rgba(15, 110, 86, 0.4);
+  color: #0f6e56;
+  font-weight: 600;
+}
+.btn-mini.btn-mini-go:hover {
+  background: #dcefe4;
+}
+
+/* Κουκκίδα ημερολογίου — προγραμματισμένη (μωβ) */
+.cal-dot-planned { background: #7a52c9; }
+
+/* Μικρή βοηθητική επεξήγηση κάτω από τίτλο ενότητας */
+.section-hint {
+  margin: -4px 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}

@@ -2,7 +2,25 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PartnerForm from '../PartnerForm';
+import ActionForm from '@/app/(app)/leads/[id]/ActionForm';
+import ActionItem from '@/app/(app)/leads/[id]/ActionItem';
+import {
+  createPartnerAction,
+  updateAction,
+  deleteAction,
+  completeAction,
+} from '@/app/(app)/actions/actions';
 import { PARTNER_TYPE, partnerName, CRM_STATUS } from '@/lib/labels';
+
+// Προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
+function actionSort(a, b) {
+  const ap = a.status === 'planned';
+  const bp = b.status === 'planned';
+  if (ap && bp) return new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0);
+  if (ap) return -1;
+  if (bp) return 1;
+  return new Date(b.acted_at || 0) - new Date(a.acted_at || 0);
+}
 
 export default async function PartnerDetail({ params }) {
   const { id } = await params;
@@ -28,6 +46,17 @@ export default async function PartnerDetail({ params }) {
     .eq('partner_id', id);
 
   const leads = (links ?? []).map((r) => r.lead).filter(Boolean);
+
+  // Ενέργειες / επαφές αυτού του συνεργάτη (χωρίς lead)
+  const { data: contactActionsRaw } = await supabase
+    .from('actions')
+    .select(
+      'id, description, result, is_final, next_action_at, notes, acted_at, status, scheduled_at, ' +
+        'salesperson:profiles!actions_salesperson_id_fkey(name:full_name)'
+    )
+    .eq('partner_id', id);
+  const contactActions = (contactActionsRaw ?? []).slice().sort(actionSort);
+  const addContactAction = createPartnerAction.bind(null, id);
 
   const pipeline = leads.reduce((a, l) => a + Number(l.lead_size_eur || 0), 0);
   const sales = leads.reduce((a, l) => a + Number(l.sale_value_eur || 0), 0);
@@ -87,6 +116,32 @@ export default async function PartnerDetail({ params }) {
           )}
         </section>
       </div>
+
+      <section className="card actions-card">
+        <div className="actions-head">
+          <h2>Ενέργειες / επαφές</h2>
+          <ActionForm action={addContactAction} />
+        </div>
+        <p className="section-hint">
+          Προγραμμάτισε ή κατέγραψε επαφές με τον συνεργάτη (τηλέφωνο, επίσκεψη) — για καλλιέργεια σχέσης, χωρίς σύνδεση με lead.
+        </p>
+
+        {contactActions.length === 0 ? (
+          <div className="dash-empty">Καμία ενέργεια/επαφή ακόμη.</div>
+        ) : (
+          <ol className="timeline">
+            {contactActions.map((a) => (
+              <ActionItem
+                key={a.id}
+                action={a}
+                updateAction={updateAction}
+                deleteAction={deleteAction}
+                completeAction={completeAction}
+              />
+            ))}
+          </ol>
+        )}
+      </section>
     </div>
   );
 }

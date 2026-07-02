@@ -3,9 +3,11 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Χρησιμοποιείται και σε lead και σε συνεργάτη — δέχεται το server action ως prop.
 export default function ActionForm({ action }) {
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
+  const [kind, setKind] = useState('done'); // 'done' | 'planned'
   const [hasNext, setHasNext] = useState(false);
   const router = useRouter();
 
@@ -18,6 +20,7 @@ export default function ActionForm({ action }) {
       }
       setOpen(false);
       setHasNext(false);
+      setKind('done');
       router.refresh();
     });
   }
@@ -30,49 +33,86 @@ export default function ActionForm({ action }) {
     );
   }
 
+  const planned = kind === 'planned';
+
   return (
     <form action={onSubmit} className="action-form">
+      <input type="hidden" name="kind" value={kind} />
+
+      <div className="af-toggle">
+        <button
+          type="button"
+          className={!planned ? 'on' : ''}
+          onClick={() => setKind('done')}
+        >
+          Καταγραφή (έγινε)
+        </button>
+        <button
+          type="button"
+          className={planned ? 'on' : ''}
+          onClick={() => setKind('planned')}
+        >
+          Προγραμματισμός (θα γίνει)
+        </button>
+      </div>
+
       <div className="field">
-        <label>Τι έγινε</label>
+        <label>{planned ? 'Τι θα γίνει' : 'Τι έγινε'}</label>
         <input
           name="description"
           type="text"
-          placeholder="π.χ. Τηλεφωνική επικοινωνία, αποστολή προσφοράς…"
+          placeholder={
+            planned
+              ? 'π.χ. Τηλέφωνο, επίσκεψη, αποστολή προσφοράς…'
+              : 'π.χ. Τηλεφωνική επικοινωνία, αποστολή προσφοράς…'
+          }
           required
         />
       </div>
 
-      <div className="field">
-        <label>Αποτέλεσμα</label>
-        <input name="result" type="text" placeholder="π.χ. Ζήτησε προσφορά, ραντεβού…" />
-      </div>
-
-      <div className="field">
-        <label className="check-row">
-          <input type="checkbox" name="is_final" />
-          <span>Τελική ενέργεια (κλείνει — δεν υπάρχει επόμενο βήμα)</span>
-        </label>
-      </div>
-
-      <div className="field">
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={hasNext}
-            onChange={(e) => setHasNext(e.target.checked)}
-          />
-          <span>Προγραμματισμός επόμενης ενέργειας</span>
-        </label>
-      </div>
-
-      {hasNext && (
+      {planned ? (
         <div className="field">
-          <label>Επόμενη ενέργεια — ημ/ώρα</label>
-          <input name="next_action_at" type="datetime-local" />
+          <label>Πότε — ημ/ώρα</label>
+          <input name="scheduled_at" type="datetime-local" required />
           <span className="field-hint">
-            Θα δημιουργηθεί αυτόματα υπενθύμιση στα εισερχόμενά σου γι' αυτή την ημερομηνία.
+            Θα εμφανιστεί ως επερχόμενη στο ημερολόγιο και στο χρονολόγιο.
           </span>
         </div>
+      ) : (
+        <>
+          <div className="field">
+            <label>Αποτέλεσμα</label>
+            <input name="result" type="text" placeholder="π.χ. Ζήτησε προσφορά, ραντεβού…" />
+          </div>
+
+          <div className="field">
+            <label className="check-row">
+              <input type="checkbox" name="is_final" />
+              <span>Τελική ενέργεια (κλείνει — δεν υπάρχει επόμενο βήμα)</span>
+            </label>
+          </div>
+
+          <div className="field">
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={hasNext}
+                onChange={(e) => setHasNext(e.target.checked)}
+              />
+              <span>Προγραμματισμός επόμενης ενέργειας</span>
+            </label>
+          </div>
+
+          {hasNext && (
+            <div className="field">
+              <label>Επόμενη ενέργεια — ημ/ώρα</label>
+              <input name="next_action_at" type="datetime-local" />
+              <span className="field-hint">
+                Θα δημιουργηθεί αυτόματα υπενθύμιση στα εισερχόμενά σου.
+              </span>
+            </div>
+          )}
+        </>
       )}
 
       <div className="field">
@@ -85,7 +125,7 @@ export default function ActionForm({ action }) {
           Άκυρο
         </button>
         <button type="submit" className="btn-primary" disabled={pending}>
-          {pending ? 'Καταχώριση…' : 'Καταχώριση ενέργειας'}
+          {pending ? 'Καταχώριση…' : planned ? 'Προγραμματισμός' : 'Καταχώριση ενέργειας'}
         </button>
       </div>
     </form>

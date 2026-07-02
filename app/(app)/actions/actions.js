@@ -18,98 +18,170 @@ async function currentUserId(supabase) {
   return user?.id ?? null;
 }
 
-// --- Καταγραφή ενέργειας πώλησης --------------------------------------------
-// Αν οριστεί "επόμενη ενέργεια (next_action_at)", δημιουργείται ΑΥΤΟΜΑΤΑ
-// υπενθύμιση (reminder) στο inbox του πωλητή για εκείνη την ημερομηνία.
-export async function createAction(leadId, formData) {
-  const supabase = await createClient();
-  const me = await currentUserId(supabase);
-
-  const description = clean(formData.get('description'));
-  const result = clean(formData.get('result'));
-  const isFinal = formData.get('is_final') === 'on';
-  const nextAt = clean(formData.get('next_action_at'));
-  const notes = clean(formData.get('notes'));
-
-  const { data: action, error } = await supabase
-    .from('actions')
+// Δημιουργεί reminder + notification στον εαυτό μου για μια ημερομηνία (follow-up).
+async function createSelfReminder(supabase, me, { leadId, label, at }) {
+  const { data: msg } = await supabase
+    .from('messages')
     .insert({
       company_id: COMPANY_ID,
-      lead_id: leadId,
-      salesperson_id: me,
-      description,
-      result,
-      is_final: isFinal,
-      next_action_at: nextAt,
-      notes,
-      acted_at: new Date().toISOString(),
+      type: 'reminder',
+      sender_id: me,
+      recipient_user_id: me,
+      lead_id: leadId ?? null,
+      body: label,
+      priority: 'medium',
+      due_at: at,
+      status: 'new',
     })
     .select('id')
     .single();
 
-  if (error) return { error: error.message };
+  if (msg) {
+    await supabase.from('notifications').insert({
+      company_id: COMPANY_ID,
+      user_id: me,
+      message_id: msg.id,
+      type: 'due_reminder',
+    });
+  }
+}
 
-  // Auto-reminder: αν υπάρχει επόμενη ενέργεια και δεν είναι τελική,
-  // φτιάχνουμε reminder στο inbox μου, συνδεδεμένο με το lead.
-  if (nextAt && !isFinal) {
-    // Φέρνουμε σύντομη περιγραφή lead για το κείμενο της υπενθύμισης
-    const { data: lead } = await supabase
-      .from('leads')
-      .select('project_desc')
-      .eq('id', leadId)
-      .single();
+// Κοινή εισαγωγή ενέργειας — για lead ή για συνεργάτη, ολοκληρωμένη ή προγραμματισμένη.
+async function insertAction(supabase, { leadId, partnerId, formData }) {
+  const me = await currentUserId(supabase);
+  const kind = formData.get('kind') === 'planned' ? 'planned' : 'done';
+  const description = clean(formData.get('description'));
+  const notes = clean(formData.get('notes'));
 
-    const label = lead?.project_desc
-      ? `Επόμενη ενέργεια: ${lead.project_desc.slice(0, 60)}`
-      : 'Επόμενη ενέργεια (follow-up)';
-
-    const { data: msg } = await supabase
-      .from('messages')
-      .insert({
-        company_id: COMPANY_ID,
-        type: 'reminder',
-        sender_id: me,
-        recipient_user_id: me, // υπενθύμιση στον εαυτό μου
-        lead_id: leadId,
-        body: label,
-        priority: 'medium',
-        due_at: nextAt,
-        status: 'new',
-      })
-      .select('id')
-      .single();
-
-    // Notification για να ανάψει το badge όταν φτάσει η ώρα
-    if (msg) {
-      await supabase.from('notifications').insert({
-        company_id: COMPANY_ID,
-        user_id: me,
-        message_id: msg.id,
-        type: 'due_reminder',
-      });
-    }
+  // --- Προγραμματισμένη (θα γίνει) ---
+  if (kind === 'planned') {
+    const scheduledAt = clean(formData.get('scheduled_at'));
+    const { error } = await supabase.from('actions').insert({
+      company_id: COMPANY_ID,
+      lead_id: leadId ?? null,
+      partner_id: partnerId ?? null,
+      salesperson_id: me,
+      description,
+      notes,
+      status: 'planned',
+      scheduled_at: scheduledAt,
+      is_final: false,
+      acted_at: null,
+    });
+    return { error: error?.message };
   }
 
+  // --- Ολοκληρωμένη (έγινε) ---
+  const result = clean(formData.get('result'));
+  const isFinal = formData.get('is_final') === 'on';
+  const nextAt = clean(formData.get('next_action_at'));
+
+  const { error } = await supabase.from('actions').insert({
+    company_id: COMPANY_ID,
+    lead_id: leadId ?? null,
+    partner_id: partnerId ?? null,
+    salesperson_id: me,
+    description,
+    result,
+    is_final: isFinal,
+    next_action_at: nextAt,
+    notes,
+    status: 'done',
+    acted_at: new Date().toISOString(),
+  });
+  if (error) return { error: error.message };
+
+  // Auto-reminder: όπως πριν — μόνο για ολοκληρωμένη ενέργεια με επόμενο βήμα.
+  if (nextAt && !isFinal) {
+    let label = 'Επόμενη ενέργεια (follow-up)';
+    if (leadId) {
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('project_desc')
+        .eq('id', leadId)
+        .single();
+      if (lead?.project_desc) label = `Επόμενη ενέργεια: ${lead.project_desc.slice(0, 60)}`;
+    } else if (partnerId) {
+      const { data: p } = await supabase
+        .from('partners')
+        .select('full_name, company_name')
+        .eq('id', partnerId)
+        .single();
+      const nm = p?.full_name || p?.company_name;
+      if (nm) label = `Επόμενη επαφή: ${nm.slice(0, 60)}`;
+    }
+    await createSelfReminder(supabase, me, { leadId, label, at: nextAt });
+  }
+
+  return {};
+}
+
+// --- Ενέργεια για lead ------------------------------------------------------
+export async function createAction(leadId, formData) {
+  const supabase = await createClient();
+  const res = await insertAction(supabase, { leadId, partnerId: null, formData });
+  if (res.error) return { error: res.error };
   revalidatePath(`/leads/${leadId}`);
   revalidatePath('/actions');
+  revalidatePath('/calendar');
   return { ok: true };
 }
 
-// --- Επεξεργασία υπάρχουσας ενέργειας ----------------------------------------
+// --- Ενέργεια επαφής για συνεργάτη (χωρίς lead) ------------------------------
+export async function createPartnerAction(partnerId, formData) {
+  const supabase = await createClient();
+  const res = await insertAction(supabase, { leadId: null, partnerId, formData });
+  if (res.error) return { error: res.error };
+  revalidatePath(`/partners/${partnerId}`);
+  revalidatePath('/actions');
+  revalidatePath('/calendar');
+  return { ok: true };
+}
+
+// --- Ολοκλήρωση προγραμματισμένης ενέργειας ---------------------------------
+export async function completeAction(actionId, formData) {
+  const supabase = await createClient();
+
+  const patch = { status: 'done', acted_at: new Date().toISOString() };
+  const result = formData ? clean(formData.get('result')) : null;
+  if (result) patch.result = result;
+
+  const { data: existing } = await supabase
+    .from('actions')
+    .select('lead_id, partner_id')
+    .eq('id', actionId)
+    .single();
+
+  const { error } = await supabase.from('actions').update(patch).eq('id', actionId);
+  if (error) return { error: error.message };
+
+  if (existing?.lead_id) revalidatePath(`/leads/${existing.lead_id}`);
+  if (existing?.partner_id) revalidatePath(`/partners/${existing.partner_id}`);
+  revalidatePath('/actions');
+  revalidatePath('/calendar');
+  return { ok: true };
+}
+
+// --- Επεξεργασία ------------------------------------------------------------
 export async function updateAction(actionId, formData) {
   const supabase = await createClient();
 
+  const formKind = formData.get('form_kind') === 'planned' ? 'planned' : 'done';
   const patch = {
     description: clean(formData.get('description')),
-    result: clean(formData.get('result')),
-    is_final: formData.get('is_final') === 'on',
-    next_action_at: clean(formData.get('next_action_at')),
     notes: clean(formData.get('notes')),
   };
+  if (formKind === 'planned') {
+    patch.scheduled_at = clean(formData.get('scheduled_at'));
+  } else {
+    patch.result = clean(formData.get('result'));
+    patch.is_final = formData.get('is_final') === 'on';
+    patch.next_action_at = clean(formData.get('next_action_at'));
+  }
 
   const { data: existing, error: e0 } = await supabase
     .from('actions')
-    .select('lead_id')
+    .select('lead_id, partner_id')
     .eq('id', actionId)
     .single();
   if (e0) return { error: e0.message };
@@ -118,18 +190,19 @@ export async function updateAction(actionId, formData) {
   if (error) return { error: error.message };
 
   if (existing?.lead_id) revalidatePath(`/leads/${existing.lead_id}`);
+  if (existing?.partner_id) revalidatePath(`/partners/${existing.partner_id}`);
   revalidatePath('/actions');
   revalidatePath('/calendar');
   return { ok: true };
 }
 
-// --- Διαγραφή ενέργειας ------------------------------------------------------
+// --- Διαγραφή ---------------------------------------------------------------
 export async function deleteAction(actionId) {
   const supabase = await createClient();
 
   const { data: existing } = await supabase
     .from('actions')
-    .select('lead_id')
+    .select('lead_id, partner_id')
     .eq('id', actionId)
     .single();
 
@@ -137,6 +210,7 @@ export async function deleteAction(actionId) {
   if (error) return { error: error.message };
 
   if (existing?.lead_id) revalidatePath(`/leads/${existing.lead_id}`);
+  if (existing?.partner_id) revalidatePath(`/partners/${existing.partner_id}`);
   revalidatePath('/actions');
   revalidatePath('/calendar');
   return { ok: true };

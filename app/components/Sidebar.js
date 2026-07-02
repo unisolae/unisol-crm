@@ -14,7 +14,7 @@ const NAV = [
     items: [
       { href: '/dashboard', label: 'Επισκόπηση', icon: 'ti-layout-dashboard' },
       { href: '/leads', label: 'Leads', icon: 'ti-target' },
-      { href: '/actions', label: 'Ενέργειες', icon: 'ti-checkbox' },
+      { href: '/actions', label: 'Ενέργειες & επαφές', icon: 'ti-checkbox' },
       { href: '/calendar', label: 'Ημερολόγιο', icon: 'ti-calendar' },
     ],
   },

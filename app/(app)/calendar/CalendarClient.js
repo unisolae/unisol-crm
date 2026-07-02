@@ -11,6 +11,7 @@ const WEEKDAYS = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
 
 // Κατηγορία → χρωματική κλάση (κουκκίδα)
 function dotClass(ev) {
+  if (ev.kind === 'planned') return 'cal-dot-planned'; // μωβ — θα γίνει
   if (ev.kind === 'action') return 'cal-dot-action'; // πράσινο — τι έκανα
   if (ev.type === 'callback') return 'cal-dot-callback'; // πορτοκαλί
   if (ev.type === 'reminder') return 'cal-dot-reminder'; // κίτρινο
@@ -134,6 +135,7 @@ export default function CalendarClient({ events }) {
           <span><span className="cal-dot cal-dot-callback" /> Callback</span>
           <span><span className="cal-dot cal-dot-reminder" /> Υπενθύμιση</span>
           <span><span className="cal-dot cal-dot-action" /> Ενέργεια</span>
+          <span><span className="cal-dot cal-dot-planned" /> Προγραμματισμένη</span>
         </div>
       </div>
 

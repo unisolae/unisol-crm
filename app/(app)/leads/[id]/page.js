@@ -2,12 +2,22 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { updateLead } from '../actions';
-import { createAction, updateAction, deleteAction } from '@/app/(app)/actions/actions';
+import { createAction, updateAction, deleteAction, completeAction } from '@/app/(app)/actions/actions';
 import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
 import ActionItem from './ActionItem';
 import LeadPartners from './LeadPartners';
 import { partnerName } from '@/lib/labels';
+
+// Ταξινόμηση χρονολογίου: προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
+function actionSort(a, b) {
+  const ap = a.status === 'planned';
+  const bp = b.status === 'planned';
+  if (ap && bp) return new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0);
+  if (ap) return -1;
+  if (bp) return 1;
+  return new Date(b.acted_at || 0) - new Date(a.acted_at || 0);
+}
 
 const STATUS = {
   unknown: { label: 'Άγνωστη', cls: 'st-unknown' },
@@ -47,14 +57,14 @@ export default async function LeadDetail({ params, searchParams }) {
     .order('full_name');
 
   // Ενέργειες αυτού του lead (χρονολόγιο)
-  const { data: leadActions } = await supabase
+  const { data: leadActionsRaw } = await supabase
     .from('actions')
     .select(
-      'id, description, result, is_final, next_action_at, notes, acted_at, ' +
+      'id, description, result, is_final, next_action_at, notes, acted_at, status, scheduled_at, ' +
         'salesperson:profiles!actions_salesperson_id_fkey(name:full_name)'
     )
-    .eq('lead_id', id)
-    .order('acted_at', { ascending: false });
+    .eq('lead_id', id);
+  const leadActions = (leadActionsRaw ?? []).slice().sort(actionSort);
 
   // Συνεργάτες αυτού του lead + διαθέσιμοι συνεργάτες για το picker
   const { data: partnerLinks } = await supabase
@@ -72,7 +82,7 @@ export default async function LeadDetail({ params, searchParams }) {
   );
 
   const st = STATUS[lead.crm_status] ?? STATUS.unknown;
-  const updateAction = updateLead.bind(null, id);
+  const saveLead = updateLead.bind(null, id);
   const addAction = createAction.bind(null, id);
 
   const address = [lead.address_street, lead.address_number].filter(Boolean).join(' ');
@@ -124,7 +134,7 @@ export default async function LeadDetail({ params, searchParams }) {
 
         <section className="card">
           <h2>Διαχείριση πώλησης</h2>
-          <LeadEditForm lead={lead} salespeople={salespeople ?? []} action={updateAction} />
+          <LeadEditForm lead={lead} salespeople={salespeople ?? []} action={saveLead} />
         </section>
       </div>
 
@@ -149,6 +159,7 @@ export default async function LeadDetail({ params, searchParams }) {
                 action={a}
                 updateAction={updateAction}
                 deleteAction={deleteAction}
+                completeAction={completeAction}
               />
             ))}
           </ol>
