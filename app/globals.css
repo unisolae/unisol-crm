@@ -1973,3 +1973,169 @@ h3,
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   font-weight: 600;
 }
+
+/* ============================================================
+   ΣΥΝΕΡΓΑΤΕΣ (partners)
+   ============================================================ */
+
+/* Ουδέτερο badge για τύπο συνεργάτη */
+.badge-neutral {
+  background: #ece9e2;
+  color: #5f5e5a;
+}
+
+/* Κουμπί διαγραφής (danger) στη φόρμα συνεργάτη */
+.btn-ghost.danger {
+  color: #a32d2d;
+  border-color: rgba(163, 45, 45, 0.35);
+}
+.btn-ghost.danger:hover {
+  background: #f7e6e6;
+}
+
+/* --- Συνεργάτες σε καρτέλα lead (chips + combobox) --- */
+.lp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lp-empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 12px;
+  background: var(--cream);
+  border: 1px solid var(--line-soft);
+  border-radius: 20px;
+  font-size: 13px;
+}
+.lp-chip a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.lp-chip a:hover {
+  text-decoration: underline;
+}
+.lp-chip small {
+  color: var(--muted);
+}
+.lp-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(20, 52, 47, 0.08);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.lp-chip button:hover {
+  background: #f5dede;
+  color: #a32d2d;
+}
+.lp-chip button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lp-add {
+  position: relative;
+  max-width: 420px;
+}
+.lp-add > input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: #fff;
+  color: var(--ink);
+}
+.lp-add > input:focus {
+  outline: none;
+  border-color: var(--ink-2);
+}
+
+.lp-pop {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.lp-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.lp-opt:hover {
+  background: var(--cream);
+}
+.lp-opt small {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.lp-opt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lp-create {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.lp-create > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.lp-create select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--ink);
+}
+.lp-hint {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}

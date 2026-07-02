@@ -6,6 +6,8 @@ import { createAction, updateAction, deleteAction } from '@/app/(app)/actions/ac
 import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
 import ActionItem from './ActionItem';
+import LeadPartners from './LeadPartners';
+import { partnerName } from '@/lib/labels';
 
 const STATUS = {
   unknown: { label: 'Άγνωστη', cls: 'st-unknown' },
@@ -53,6 +55,21 @@ export default async function LeadDetail({ params, searchParams }) {
     )
     .eq('lead_id', id)
     .order('acted_at', { ascending: false });
+
+  // Συνεργάτες αυτού του lead + διαθέσιμοι συνεργάτες για το picker
+  const { data: partnerLinks } = await supabase
+    .from('lead_partners')
+    .select('partner:partners(id, full_name, company_name, type)')
+    .eq('lead_id', id);
+  const linkedPartners = (partnerLinks ?? []).map((r) => r.partner).filter(Boolean);
+
+  const { data: allPartnersRaw } = await supabase
+    .from('partners')
+    .select('id, full_name, company_name, type')
+    .eq('is_active', true);
+  const allPartners = (allPartnersRaw ?? []).sort((a, b) =>
+    partnerName(a).localeCompare(partnerName(b), 'el')
+  );
 
   const st = STATUS[lead.crm_status] ?? STATUS.unknown;
   const updateAction = updateLead.bind(null, id);
@@ -110,6 +127,11 @@ export default async function LeadDetail({ params, searchParams }) {
           <LeadEditForm lead={lead} salespeople={salespeople ?? []} action={updateAction} />
         </section>
       </div>
+
+      <section className="card">
+        <h2>Συνεργάτες έργου</h2>
+        <LeadPartners leadId={id} linked={linkedPartners} all={allPartners} />
+      </section>
 
       <section className="card actions-card">
         <div className="actions-head">

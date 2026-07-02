@@ -25,7 +25,7 @@ const NAV = [
   {
     section: 'Διαχείριση',
     items: [
-      { href: '/partners', label: 'Συνεργάτες', icon: 'ti-users-group', soon: true },
+      { href: '/partners', label: 'Συνεργάτες', icon: 'ti-users-group' },
       { href: '/stats', label: 'Στατιστικά', icon: 'ti-chart-bar', soon: true },
       { href: '/users', label: 'Χρήστες', icon: 'ti-user-cog', soon: true },
       { href: '/import', label: 'Εισαγωγή', icon: 'ti-upload' },
