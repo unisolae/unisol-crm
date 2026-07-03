@@ -2267,3 +2267,437 @@ h3,
     transform: rotate(360deg);
   }
 }
+
+/* ================================================================
+   REDESIGN Φ1+Φ2 — Χρώματα μάρκας Unisol + minimal + κάτω μπάρα
+   (overrides στο τέλος: κερδίζουν το cascade χωρίς αλλαγές πιο πάνω)
+   ================================================================ */
+
+:root {
+  /* Πετρόλ = ο «εργάτης» (κείμενο, κουμπιά, πλοήγηση) */
+  --ink: #003d4c;
+  --ink-2: #0b5468;
+  --ink-3: #002a35;
+  /* Κόκκινο = η υπογραφή (το «+», badges, ό,τι θέλει προσοχή) */
+  --accent: #db0032;
+  --accent-soft: #a4dbe8; /* «CRM» στο brand, login aside */
+  --red: #db0032;
+  --sky: #a4dbe8;
+  --cream: #edf2f4;       /* ψυχρό hover/chips αντί για ζεστό κρεμ */
+  --muted: #64757c;
+  --line: rgba(0, 61, 76, 0.18);
+  --line-soft: rgba(0, 61, 76, 0.09);
+}
+
+body {
+  background: #f6f8f9;
+}
+
+/* --- Κουμπιά: κύρια δράση σε πετρόλ (ΟΧΙ κόκκινο) --------------- */
+.btn-primary {
+  background: var(--ink);
+  border-radius: 12px;
+}
+.btn-primary:hover {
+  background: var(--ink-2);
+}
+.btn-inline {
+  color: var(--ink-2);
+}
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--ink);
+}
+input[type='checkbox'].msg-check {
+  accent-color: #0f6e56; /* η ολοκλήρωση μηνύματος μένει «επιτυχία» */
+}
+
+/* «Σήμερα» = πορτοκαλί προσοχή (το κόκκινο μόνο για εκπρόθεσμα) */
+.due-today,
+.sec-today,
+.bucket-today {
+  color: #ba7517;
+}
+.inbox-tab.active {
+  border-bottom-color: var(--ink);
+}
+
+/* --- Καταστάσεις: τελεία + λέξη αντί για γεμάτα badges ---------- */
+.badge {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.st-unknown { color: #5f6e75; background: none; }
+.st-active { color: #0f6e56; background: none; }
+.st-closed { color: #0c5a77; background: none; }
+.st-negative { color: #c40030; background: none; }
+.badge-neutral { color: #5f6e75; background: none; }
+/* Προγραμματισμένη: ΚΟΥΦΙΑ πετρόλ κουκκίδα (= δεν έγινε ακόμη) */
+.badge-planned { color: #0c5a77; background: none; }
+.badge-planned::before {
+  width: 7px;
+  height: 7px;
+  background: transparent;
+  border: 2px solid currentColor;
+}
+
+/* Χρονολόγιο: planned κούφια, done γεμάτη πετρόλ */
+.timeline-dot.dot-planned {
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: none;
+}
+
+/* Ημερολόγιο: το μωβ φεύγει — planned πετρόλ, callback κόκκινο */
+.cal-dot-planned { background: #2b83a3; }
+.cal-dot-callback { background: var(--red); }
+.cal-dot-task { background: #4a9cbc; }
+
+/* Tags μηνυμάτων στην παλέτα */
+.tag-message { background: #d6ecf4; color: #0c5a77; }
+.tag-callback { background: #fbe4ea; color: #b00230; }
+.tag-followup { background: #e6eef1; color: #3c525a; }
+
+/* --- Επιλεγμένα φίλτρα/διακόπτες: γαλάζιο --------------------- */
+.ms-trigger.has-sel {
+  background: var(--sky);
+  border-color: var(--sky);
+  color: var(--ink);
+}
+.seg-btn.active {
+  background: var(--sky);
+  color: var(--ink);
+  box-shadow: none;
+}
+.af-toggle button.on {
+  background: var(--sky);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+/* --- Sidebar (desktop): brand lowercase + κόκκινη ένδειξη ------- */
+.sb-brand {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.sb-brand span {
+  color: var(--sky);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-left: 6px;
+  font-size: 0.72em;
+}
+
+/* ================================================================
+   ΚΑΤΩ ΜΠΑΡΑ (mobile) + φύλλα
+   ================================================================ */
+.bnav {
+  display: none;
+}
+.bsheet-bg {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  /* Το sidebar/burger αντικαθίστανται πλήρως από την κάτω μπάρα */
+  .sidebar,
+  .sb-burger,
+  .sb-overlay {
+    display: none !important;
+  }
+
+  .app-main .page {
+    padding: 20px 16px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .bnav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    display: flex;
+    align-items: stretch;
+    background: #fff;
+    border-top: 1px solid var(--line-soft);
+    padding: 0 4px calc(4px + env(safe-area-inset-bottom));
+  }
+  .bnav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    padding: 7px 0 4px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .bnav-item i {
+    font-size: 21px;
+  }
+  .bnav-item.on {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .bnav-plus-wrap {
+    flex: 0 0 64px;
+  }
+  .bnav-plus {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -16px;
+    border: 3px solid #f6f8f9;
+    box-shadow: 0 4px 12px rgba(219, 0, 50, 0.3);
+  }
+  .bnav-plus i {
+    font-size: 24px;
+  }
+  .bnav-badge {
+    position: absolute;
+    top: 3px;
+    right: 16px;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    background: var(--red);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  .bsheet-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(0, 30, 38, 0.45);
+    display: flex;
+    align-items: flex-end;
+  }
+  .bsheet {
+    background: #fff;
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
+    animation: bsheet-up 0.18s ease-out;
+  }
+  @keyframes bsheet-up {
+    from { transform: translateY(24px); opacity: 0.6; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .bsheet-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .bsheet-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 13px 2px;
+    border: none;
+    border-bottom: 1px solid var(--line-soft);
+    background: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .bsheet-row:last-child {
+    border-bottom: none;
+  }
+  .bsheet-row i {
+    font-size: 20px;
+    color: #3c525a;
+    width: 22px;
+    text-align: center;
+  }
+  .bsheet-row.danger,
+  .bsheet-row.danger i {
+    color: var(--red);
+  }
+  .bsheet-row.soon {
+    color: var(--muted);
+    cursor: default;
+  }
+  .bsheet-row.soon em {
+    margin-left: auto;
+    font-style: normal;
+    font-size: 11px;
+    background: var(--cream);
+    color: var(--muted);
+    padding: 2px 9px;
+    border-radius: 7px;
+  }
+  .bsheet-user {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .bsheet-av {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--sky);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .bsheet-user b {
+    display: block;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .bsheet-user small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* --- Αφή: 16px πεδία (τέλος το auto-zoom στο iOS), 44px στόχοι */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+  textarea {
+    min-height: 88px;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-height: 0;
+    width: 20px;
+    height: 20px;
+  }
+  .btn-primary,
+  .btn-ghost {
+    min-height: 44px;
+  }
+  .btn-mini {
+    min-height: 36px;
+    padding: 7px 11px;
+  }
+}
+
+/* ================================================================
+   Σελίδα «Νέα ενέργεια» (/actions/new)
+   ================================================================ */
+.anew {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.anew-pick input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  font-size: 15px;
+  background: #fff;
+  color: var(--ink);
+}
+.anew-pick input:focus {
+  outline: none;
+  border-color: var(--ink-2);
+}
+.anew-list {
+  margin-top: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.anew-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.anew-opt:last-child {
+  border-bottom: none;
+}
+.anew-opt:hover {
+  background: var(--cream);
+}
+.anew-opt-t {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.anew-opt-s {
+  font-size: 12px;
+  color: var(--muted);
+}
+.anew-empty {
+  padding: 14px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.anew-empty a {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.anew-sel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--cream);
+  border-radius: 11px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.anew-sel small {
+  color: var(--muted);
+  font-weight: 400;
+}

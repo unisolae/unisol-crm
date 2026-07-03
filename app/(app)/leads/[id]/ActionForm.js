@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import GreekDateTime from '@/app/components/GreekDateTime';
 
 // Χρησιμοποιείται και σε lead και σε συνεργάτη — δέχεται το server action ως prop.
-export default function ActionForm({ action }) {
-  const [open, setOpen] = useState(false);
+// afterSubmit (προαιρετικό): τι γίνεται μετά την επιτυχή καταχώριση (default: refresh).
+export default function ActionForm({ action, afterSubmit, startOpen = false }) {
+  const [open, setOpen] = useState(startOpen);
   const [pending, start] = useTransition();
   const [kind, setKind] = useState('done'); // 'done' | 'planned'
   const [hasNext, setHasNext] = useState(false);
@@ -22,7 +23,8 @@ export default function ActionForm({ action }) {
       setOpen(false);
       setHasNext(false);
       setKind('done');
-      router.refresh();
+      if (afterSubmit) afterSubmit();
+      else router.refresh();
     });
   }
 

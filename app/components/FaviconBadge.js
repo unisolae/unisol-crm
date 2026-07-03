@@ -15,7 +15,7 @@ export default function FaviconBadge({ unread = 0 }) {
     if (!ctx) return;
 
     // Φόντο (σκούρο πράσινο, στρογγυλεμένο)
-    ctx.fillStyle = '#0d2622';
+    ctx.fillStyle = '#003d4c';
     const r = 14;
     ctx.beginPath();
     ctx.moveTo(r, 0);
@@ -27,7 +27,7 @@ export default function FaviconBadge({ unread = 0 }) {
     ctx.fill();
 
     // Γράμμα «U»
-    ctx.fillStyle = '#f4f1ea';
+    ctx.fillStyle = '#f6f8f9';
     ctx.font = 'bold 42px Georgia, serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -35,12 +35,12 @@ export default function FaviconBadge({ unread = 0 }) {
 
     // Κόκκινη κουκκίδα αν υπάρχουν αδιάβαστα
     if (unread > 0) {
-      ctx.fillStyle = '#e23b3b';
+      ctx.fillStyle = '#db0032';
       ctx.beginPath();
       ctx.arc(size - 16, 16, 14, 0, Math.PI * 2);
       ctx.fill();
       // λεπτό περίγραμμα για αντίθεση
-      ctx.strokeStyle = '#0d2622';
+      ctx.strokeStyle = '#003d4c';
       ctx.lineWidth = 3;
       ctx.stroke();
     }

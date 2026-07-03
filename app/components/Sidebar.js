@@ -37,7 +37,6 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
   const pathname = usePathname();
   const router = useRouter();
   const [unread, setUnread] = useState(initialUnread);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const refreshCount = useCallback(async () => {
     try {
@@ -97,7 +96,6 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
   // Ανανέωση και σε κάθε αλλαγή σελίδας (π.χ. μόλις ανοίξεις το inbox → μηδενίζει)
   useEffect(() => {
     refreshCount();
-    setMobileOpen(false);
   }, [pathname, refreshCount]);
 
   async function handleLogout() {
@@ -120,17 +118,10 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
   return (
     <>
       <FaviconBadge unread={unread} />
-      <button
-        className="sb-burger"
-        onClick={() => setMobileOpen((v) => !v)}
-        aria-label="Μενού"
-      >
-        <i className="ti ti-menu-2" aria-hidden="true" />
-      </button>
 
-      <aside className={mobileOpen ? 'sidebar sidebar-open' : 'sidebar'}>
+      <aside className="sidebar">
         <div className="sb-brand">
-          Unisol<span> CRM</span>
+          unisol<span>CRM</span>
         </div>
 
         <nav className="sb-nav">
@@ -179,8 +170,6 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
           </button>
         </div>
       </aside>
-
-      {mobileOpen && <div className="sb-overlay" onClick={() => setMobileOpen(false)} />}
     </>
   );
 }

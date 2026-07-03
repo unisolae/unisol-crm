@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/app/components/Sidebar';
+import BottomNav from '@/app/components/BottomNav';
 
 const ROLE_LABELS = {
   admin: 'Διαχειριστής',
@@ -40,6 +41,11 @@ export default async function AppLayout({ children }) {
         initialUnread={initialUnread ?? 0}
       />
       <main className="app-main">{children}</main>
+      <BottomNav
+        fullName={profile?.full_name ?? user.email}
+        roleLabel={ROLE_LABELS[profile?.role] ?? ''}
+        initialUnread={initialUnread ?? 0}
+      />
     </div>
   );
 }

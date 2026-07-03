@@ -108,10 +108,10 @@ export default async function Dashboard() {
   const unkPct = totalLeads ? Math.round((unknownLeads / totalLeads) * 100) : 0;
 
   const STATS = [
-    { label: 'Σύνολο leads', icon: 'ti-target', value: totalLeads ?? 0, barW: 100, barC: '#1d4a43' },
+    { label: 'Σύνολο leads', icon: 'ti-target', value: totalLeads ?? 0, barW: 100, barC: '#0b5468' },
     { label: 'Ενεργά', icon: 'ti-flame', value: activeLeads ?? 0, sub: `${pct}% του συνόλου`, subC: '#0f6e56', barW: pct, barC: '#1d9e75' },
-    { label: 'Αδιερεύνητα', icon: 'ti-search', value: unknownLeads ?? 0, sub: 'χρειάζονται έλεγχο', subC: '#c9683b', barW: unkPct, barC: '#c9683b' },
-    { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#6b7670', barW: 70, barC: '#d6a829' },
+    { label: 'Αδιερεύνητα', icon: 'ti-search', value: unknownLeads ?? 0, sub: 'χρειάζονται έλεγχο', subC: '#db0032', barW: unkPct, barC: '#db0032' },
+    { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#64757c', barW: 70, barC: '#d6a829' },
   ];
 
   // Προγραμματισμένες ενέργειές μου που είναι εκπρόθεσμες ή λήγουν σήμερα
@@ -128,10 +128,10 @@ export default async function Dashboard() {
 
   const GLANCE = [
     { icon: 'ti-checkbox', bg: '#dcefe4', fg: '#0f6e56', n: myActionsWeek ?? 0, text: 'ενέργειες αυτή την εβδομάδα' },
-    { icon: 'ti-calendar-clock', bg: '#ece4f5', fg: '#5b3ba0', n: plannedDueCount, text: 'προγραμματισμένες ενέργειες λήγουν' },
+    { icon: 'ti-calendar-clock', bg: '#e6eef1', fg: '#003d4c', n: plannedDueCount, text: 'προγραμματισμένες ενέργειες λήγουν' },
     { icon: 'ti-clock', bg: '#faeeda', fg: '#633806', n: todayCount, text: 'εκκρεμότητες λήγουν σήμερα' },
-    { icon: 'ti-inbox', bg: '#dfe9f6', fg: '#1c4c7c', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα' },
-    { icon: 'ti-user-plus', bg: '#f3eee4', fg: '#6b7670', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα' },
+    { icon: 'ti-inbox', bg: '#d6ecf4', fg: '#0c5a77', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα' },
+    { icon: 'ti-user-plus', bg: '#fbe4ea', fg: '#b00230', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα' },
   ];
 
   return (
