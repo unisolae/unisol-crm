@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 
 export default function MultiSelect({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  // Τοπική κατάσταση για ΑΜΕΣΟ τσεκάρισμα (η πλοήγηση/URL ενημερώνεται στο παρασκήνιο).
+  const [local, setLocal] = useState(selected);
   const ref = useRef(null);
+
+  // Συγχρονισμός με το URL μόλις ολοκληρωθεί η πλοήγηση.
+  useEffect(() => {
+    setLocal(selected);
+  }, [selected]);
 
   useEffect(() => {
     function onDoc(e) {
@@ -14,33 +22,31 @@ export default function MultiSelect({ label, options, selected, onChange }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  function toggle(value) {
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value));
-    } else {
-      onChange([...selected, value]);
-    }
+  function apply(next) {
+    setLocal(next); // άμεση ενημέρωση UI
+    startTransition(() => onChange(next)); // πλοήγηση ως transition (μη-μπλοκάρουσα)
   }
 
-  const summary =
-    selected.length === 0
-      ? label
-      : `${label}: ${selected.length}`;
+  function toggle(value) {
+    apply(local.includes(value) ? local.filter((v) => v !== value) : [...local, value]);
+  }
+
+  const summary = local.length === 0 ? label : `${label}: ${local.length}`;
 
   return (
-    <div className="ms" ref={ref}>
+    <div className={`ms${pending ? ' ms-pending' : ''}`} ref={ref}>
       <button
         type="button"
-        className={`ms-trigger${selected.length ? ' has-sel' : ''}`}
+        className={`ms-trigger${local.length ? ' has-sel' : ''}`}
         onClick={() => setOpen((o) => !o)}
       >
         {summary}
-        <span className="ms-caret">▾</span>
+        <span className={`ms-caret${pending ? ' ms-spin' : ''}`}>{pending ? '↻' : '▾'}</span>
       </button>
       {open && (
         <div className="ms-pop">
-          {selected.length > 0 && (
-            <button type="button" className="ms-clear" onClick={() => onChange([])}>
+          {local.length > 0 && (
+            <button type="button" className="ms-clear" onClick={() => apply([])}>
               Καθαρισμός
             </button>
           )}
@@ -48,7 +54,7 @@ export default function MultiSelect({ label, options, selected, onChange }) {
             <label key={opt.value} className="ms-item">
               <input
                 type="checkbox"
-                checked={selected.includes(opt.value)}
+                checked={local.includes(opt.value)}
                 onChange={() => toggle(opt.value)}
               />
               <span>{opt.label}</span>

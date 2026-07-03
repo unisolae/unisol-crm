@@ -17,15 +17,20 @@ export default async function LeadsPage({ searchParams }) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: salespeople } = await supabase
-    .from('profiles')
-    .select('id, name:full_name')
-    .eq('is_salesperson', true)
-    .order('full_name');
+  // Παράλληλα: έλεγχος χρήστη + λίστα πωλητών (ανεξάρτητα μεταξύ τους)
+  const [
+    {
+      data: { user },
+    },
+    { data: salespeople },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from('profiles')
+      .select('id, name:full_name')
+      .eq('is_salesperson', true)
+      .order('full_name'),
+  ]);
 
   // querystring για να το περνάμε στους συνδέσμους (διατήρηση context στο "πίσω")
   const ctx = new URLSearchParams();
@@ -56,35 +61,41 @@ export default async function LeadsPage({ searchParams }) {
     return query;
   }
 
-  let query = applyBaseFilters(
+  let leadsQuery = applyBaseFilters(
     supabase
       .from('leads')
       .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
       .order('created_at', { ascending: false })
       .limit(300)
   );
-  if (statusList.length) query = query.in('crm_status', statusList);
-
-  const { data: leads } = await query;
+  if (statusList.length) leadsQuery = leadsQuery.in('crm_status', statusList);
 
   // Μετρητές ανά κατάσταση (σέβονται τα υπόλοιπα φίλτρα, όχι το status)
-  async function countFor(status) {
+  function countQuery(status) {
     let cq = applyBaseFilters(
       supabase.from('leads').select('*', { count: 'exact', head: true })
     );
     if (status) cq = cq.eq('crm_status', status);
-    const { count } = await cq;
-    return count ?? 0;
+    return cq;
   }
 
-  const [cAll, cActive, cUnknown, cClosed, cNegative] = await Promise.all([
-    countFor(null),
-    countFor('active'),
-    countFor('unknown'),
-    countFor('closed'),
-    countFor('negative'),
+  // Λίστα + όλοι οι μετρητές σε ΕΝΑ παράλληλο batch (αντί σειριακά)
+  const [leadsRes, cAll, cActive, cUnknown, cClosed, cNegative] = await Promise.all([
+    leadsQuery,
+    countQuery(null),
+    countQuery('active'),
+    countQuery('unknown'),
+    countQuery('closed'),
+    countQuery('negative'),
   ]);
-  const counts = { all: cAll, active: cActive, unknown: cUnknown, closed: cClosed, negative: cNegative };
+  const leads = leadsRes.data;
+  const counts = {
+    all: cAll.count ?? 0,
+    active: cActive.count ?? 0,
+    unknown: cUnknown.count ?? 0,
+    closed: cClosed.count ?? 0,
+    negative: cNegative.count ?? 0,
+  };
 
   return (
     <div className="page">
