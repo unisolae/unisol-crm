@@ -49,7 +49,7 @@ export default async function InboxPage() {
     <div className="page">
       <div className="page-head with-action">
         <div>
-          <h1>Εισερχόμενα &amp; εκκρεμότητες</h1>
+          <h1>Μηνύματα</h1>
           <p>Μηνύματα, callbacks και υπενθυμίσεις — ομαδοποιημένα κατά επείγον.</p>
         </div>
       </div>

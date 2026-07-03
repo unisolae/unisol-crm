@@ -274,15 +274,15 @@ export default function InboxClient({ messages, me, myLeads = [] }) {
                             Σε ενέργεια
                           </button>
                         )}
-                        <button
-                          className="btn-mini"
+                        <input
+                          type="checkbox"
+                          className="msg-check"
+                          checked={false}
                           disabled={pending}
-                          onClick={() => runAction(completeMessage, m.id)}
-                          aria-label="Ολοκλήρωση"
-                          title="Ολοκλήρωση"
-                        >
-                          ✓
-                        </button>
+                          onChange={() => runAction(completeMessage, m.id)}
+                          aria-label="Σήμανση ως ολοκληρωμένο"
+                          title="Σήμανση ως ολοκληρωμένο"
+                        />
                       </>
                     )}
                   </div>
