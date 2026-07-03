@@ -2817,14 +2817,6 @@ input[type='checkbox'].msg-check {
   .filter-search {
     flex: 1 1 100%;
   }
-  /* Σκίαση πίσω από το ανοιχτό φύλλο (σε browsers με :has) */
-  .ms:has(.ms-pop)::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 30, 38, 0.35);
-    z-index: 94;
-  }
   .ms-pop {
     position: fixed;
     left: 0;
@@ -2868,5 +2860,46 @@ input[type='checkbox'].msg-check {
   }
   .inbox-actions {
     margin-left: auto;
+  }
+}
+
+/* --- Fix Φ4: πραγματική σκίαση + κουμπί «Έτοιμο» στο φύλλο φίλτρων --- */
+.ms-scrim {
+  display: none; /* στο desktop το dropdown κλείνει με κλικ απ' έξω */
+}
+.ms-head {
+  display: none; /* header μόνο στο κινητό */
+}
+
+@media (max-width: 860px) {
+  .ms-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 30, 38, 0.35);
+    z-index: 94;
+  }
+  .ms-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 4px 10px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .ms-done {
+    border: none;
+    background: var(--sky);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
   }
 }
