@@ -20,7 +20,7 @@ const NAV = [
   },
   {
     section: 'Επικοινωνία',
-    items: [{ href: '/inbox', label: 'Εισερχόμενα', icon: 'ti-inbox', badge: true }],
+    items: [{ href: '/inbox', label: 'Μηνύματα', icon: 'ti-inbox', badge: true }],
   },
   {
     section: 'Διαχείριση',
