@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ActionsFilter from './ActionsFilter';
 import { partnerName } from '@/lib/labels';
@@ -61,11 +62,14 @@ export default async function ActionsPage({ searchParams }) {
           <h1>Ενέργειες &amp; επαφές</h1>
           <p>Καταγεγραμμένες και προγραμματισμένες ενέργειες — σε leads και συνεργάτες.</p>
         </div>
+        <Link className="btn-primary" href="/actions/new">
+          + Νέα ενέργεια
+        </Link>
       </div>
 
       <ActionsFilter salespeople={salespeople ?? []} owner={ownerFilter} status={statusFilter} />
 
-      <div className="table-wrap">
+      <div className="table-wrap d-only">
         <table className="leads-table">
           <thead>
             <tr>
@@ -127,6 +131,45 @@ export default async function ActionsPage({ searchParams }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Κινητό: λίστα-κάρτες — ταπ σε ενέργεια πάει στον στόχο της */}
+      <div className="m-cards m-only">
+        {actions.map((a) => {
+          const planned = a.status === 'planned';
+          const href = a.lead
+            ? `/leads/${a.lead.id}`
+            : a.partner
+            ? `/partners/${a.partner.id}`
+            : '/actions';
+          const target = a.lead
+            ? (a.lead.project_desc || 'Lead').slice(0, 42)
+            : a.partner
+            ? partnerName(a.partner)
+            : '—';
+          return (
+            <Link key={a.id} href={href} className="m-card">
+              <div className="m-card-main">
+                <div className="m-card-t">{a.description || '—'}</div>
+                <div className="m-card-s">
+                  {target}
+                  {a.salesperson?.name ? ` · ${a.salesperson.name}` : ''}
+                </div>
+              </div>
+              <div className="m-card-side">
+                <span className={`badge ${planned ? 'badge-planned' : 'st-active'}`}>
+                  {planned ? 'προγραμμ.' : 'έγινε'}
+                </span>
+                <span className="m-card-amt">
+                  {planned ? fmtDateTime(a.scheduled_at) : fmtDateTime(a.acted_at)}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+        {actions.length === 0 && (
+          <div className="m-card-empty">Καμία ενέργεια για αυτά τα φίλτρα.</div>
+        )}
       </div>
     </div>
   );

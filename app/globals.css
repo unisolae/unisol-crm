@@ -2701,3 +2701,172 @@ input[type='checkbox'].msg-check {
   color: var(--muted);
   font-weight: 400;
 }
+
+/* ================================================================
+   Φ3+Φ4 — Κάρτες λιστών σε κινητό, φίλτρα ως φύλλο,
+   διακριτή παλέτα σημάνσεων ανά κατηγορία
+   ================================================================ */
+
+/* --- Παλέτα σημάνσεων (αίτημα: πιο ευδιάκριτες κατηγορίες) ------
+   μπλε = μήνυμα / follow-up · πορτοκαλί = callback ·
+   μωβ = υπενθύμιση · πράσινο = ενέργεια (έγινε) ·
+   πετρόλ = προγραμματισμένη                                        */
+.cal-dot-task { background: #378add; }
+.cal-dot-callback { background: #ef9f27; }
+.cal-dot-reminder { background: #7f77dd; }
+
+.tag-message { background: #ddedfb; color: #0c447c; }
+.tag-callback { background: #faeeda; color: #854f0b; }
+.tag-reminder { background: #eeedfe; color: #3c3489; }
+.tag-followup { background: #e4f1fd; color: #185fa5; }
+
+/* --- Utilities: τι φαίνεται σε desktop / κινητό ------------------ */
+.m-only { display: none; }
+@media (max-width: 860px) {
+  .d-only { display: none !important; }
+  .m-only { display: block; }
+}
+
+/* --- Λίστες-κάρτες (κινητό) -------------------------------------- */
+.m-cards {
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.m-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+}
+.m-card:last-child {
+  border-bottom: none;
+}
+.m-card:active {
+  background: var(--cream);
+}
+.m-card-main {
+  flex: 1;
+  min-width: 0;
+}
+.m-card-t {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.m-card-s {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.m-card-side .badge {
+  font-size: 11.5px;
+}
+.m-card-amt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.m-card-cnt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--cream);
+  padding: 3px 9px;
+  border-radius: 8px;
+}
+.m-card-empty {
+  padding: 34px 16px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.m-attn {
+  color: var(--red);
+  font-weight: 700;
+}
+.m-attn-soft {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* --- Φ4: Φίλτρα σε κινητό — MultiSelect ως φύλλο από κάτω -------- */
+@media (max-width: 860px) {
+  .filters {
+    gap: 8px;
+  }
+  .filter-search {
+    flex: 1 1 100%;
+  }
+  /* Σκίαση πίσω από το ανοιχτό φύλλο (σε browsers με :has) */
+  .ms:has(.ms-pop)::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 30, 38, 0.35);
+    z-index: 94;
+  }
+  .ms-pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 95;
+    border-radius: 18px 18px 0 0;
+    border: none;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 34px rgba(0, 30, 38, 0.28);
+    animation: bsheet-up 0.18s ease-out;
+  }
+  .ms-item {
+    padding: 12px 4px;
+    font-size: 15px;
+    gap: 12px;
+  }
+  .ms-clear {
+    padding: 10px 4px;
+    font-size: 14px;
+  }
+  .ms-trigger {
+    min-height: 40px;
+  }
+
+  /* --- Inbox: η δεξιά στήλη γίνεται οριζόντια σειρά κάτω από το μήνυμα */
+  .inbox-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .inbox-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+  .inbox-actions {
+    margin-left: auto;
+  }
+}

@@ -4,6 +4,7 @@ import LeadsFilters from './LeadsFilters';
 import LeadsTabs from './LeadsTabs';
 import LeadsScope from './LeadsScope';
 import { InlineStatus, InlineSalesperson, InlineSize, InlinePriority, InlineType } from './InlineEdit';
+import { CRM_STATUS } from '@/lib/labels';
 
 export default async function LeadsPage({ searchParams }) {
   const sp = await searchParams;
@@ -115,7 +116,7 @@ export default async function LeadsPage({ searchParams }) {
 
       <LeadsFilters salespeople={salespeople ?? []} />
 
-      <div className="table-wrap">
+      <div className="table-wrap d-only">
         <table className="leads-table">
           <thead>
             <tr>
@@ -171,6 +172,41 @@ export default async function LeadsPage({ searchParams }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Κινητό: λίστα-κάρτες (η επεξεργασία γίνεται μέσα στην καρτέλα) */}
+      <div className="m-cards m-only">
+        {(leads ?? []).map((l) => {
+          const eur = l.lead_size_eur
+            ? `${Number(l.lead_size_eur).toLocaleString('el-GR', { maximumFractionDigits: 0 })} €`
+            : '—';
+          return (
+            <Link
+              key={l.id}
+              href={`/leads/${l.id}${ctxStr ? `?from=${encodeURIComponent(ctxStr)}` : ''}`}
+              className="m-card"
+            >
+              <div className="m-card-main">
+                <div className="m-card-t">{l.project_desc || 'Χωρίς περιγραφή'}</div>
+                <div className="m-card-s">
+                  {l.salesperson_id ? (
+                    l.salespeople?.name || '—'
+                  ) : (
+                    <b className="m-attn">αδιάθετο</b>
+                  )}
+                  {l.city ? ` · ${l.city}` : ''}
+                </div>
+              </div>
+              <div className="m-card-side">
+                <span className={`badge st-${l.crm_status}`}>{CRM_STATUS[l.crm_status] || ''}</span>
+                <span className="m-card-amt">{eur}</span>
+              </div>
+            </Link>
+          );
+        })}
+        {(!leads || leads.length === 0) && (
+          <div className="m-card-empty">Δεν βρέθηκαν leads με αυτά τα κριτήρια.</div>
+        )}
       </div>
     </div>
   );

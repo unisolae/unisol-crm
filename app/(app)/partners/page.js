@@ -49,7 +49,7 @@ export default async function PartnersPage({ searchParams }) {
 
       <PartnersFilters />
 
-      <div className="table-wrap">
+      <div className="table-wrap d-only">
         <table className="leads-table">
           <thead>
             <tr>
@@ -94,6 +94,35 @@ export default async function PartnersPage({ searchParams }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Κινητό: λίστα-κάρτες */}
+      <div className="m-cards m-only">
+        {(partners ?? []).map((p) => {
+          const leadsN = p.lead_partners?.[0]?.count ?? 0;
+          const tel = [p.mobile, p.phone].filter(Boolean)[0];
+          return (
+            <Link key={p.id} href={`/partners/${p.id}`} className="m-card">
+              <div className="m-card-main">
+                <div className="m-card-t">
+                  {partnerName(p)}
+                  {!p.is_active && <span className="m-attn-soft"> · ανενεργός</span>}
+                </div>
+                <div className="m-card-s">
+                  {PARTNER_TYPE[p.type] || p.type}
+                  {tel ? ` · ${tel}` : ''}
+                </div>
+              </div>
+              <div className="m-card-side">
+                <span className="m-card-cnt">{leadsN} leads</span>
+                {p.erp_code && <span className="m-card-amt">ERP {p.erp_code}</span>}
+              </div>
+            </Link>
+          );
+        })}
+        {(!partners || partners.length === 0) && (
+          <div className="m-card-empty">Δεν βρέθηκαν συνεργάτες.</div>
+        )}
       </div>
     </div>
   );
