@@ -2236,3 +2236,20 @@ h3,
   padding: 4px 0;
   border-bottom: 1px solid var(--line-soft);
 }
+
+/* Checkbox ολοκλήρωσης μηνύματος (άδειο = εκκρεμές· τσεκάρεις για ολοκλήρωση) */
+.msg-check {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #0f6e56;
+  flex-shrink: 0;
+}
+.msg-check:hover {
+  box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.15);
+  border-radius: 4px;
+}
+.msg-check:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
