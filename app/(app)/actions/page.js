@@ -3,14 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 import ActionsFilter from './ActionsFilter';
 import { partnerName } from '@/lib/labels';
 
-// Προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
+// Χρονολογική σειρά: κατά ημερομηνία, πιο πρόσφατα/επερχόμενα πρώτα.
+// (προγραμματισμένη → scheduled_at, ολοκληρωμένη → acted_at)
+function effDate(a) {
+  return new Date((a.status === 'planned' ? a.scheduled_at : a.acted_at) || 0).getTime();
+}
 function actionSort(a, b) {
-  const ap = a.status === 'planned';
-  const bp = b.status === 'planned';
-  if (ap && bp) return new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0);
-  if (ap) return -1;
-  if (bp) return 1;
-  return new Date(b.acted_at || 0) - new Date(a.acted_at || 0);
+  return effDate(b) - effDate(a);
 }
 
 export default async function ActionsPage({ searchParams }) {

@@ -9,6 +9,15 @@ export default async function InboxPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Ποια μηνύματα ήταν ΑΔΙΑΒΑΣΤΑ πριν τα μαρκάρουμε — για να ξεχωρίσουν
+  // μόνο αυτή τη φορά (την πρώτη φορά που ανοίγω τη λίστα).
+  const { data: unreadNotifs } = await supabase
+    .from('notifications')
+    .select('message_id')
+    .eq('user_id', user.id)
+    .eq('is_read', false);
+  const unreadIds = (unreadNotifs ?? []).map((n) => n.message_id).filter(Boolean);
+
   // Μόλις ανοίξει το inbox, σημειώνουμε τα notifications μου ως διαβασμένα
   // (μηδενίζει το badge στο TopBar).
   await markAllNotificationsRead();
@@ -26,7 +35,7 @@ export default async function InboxPage() {
         'recipient:profiles!messages_recipient_user_id_fkey(name:full_name), ' +
         'lead:leads(project_desc, city)'
     )
-    .order('due_at', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false })
     .limit(500);
 
   // Λίστα χρηστών (για να ξέρει ο client αν "ανήκω" σε μια ομάδα)
@@ -54,7 +63,7 @@ export default async function InboxPage() {
         </div>
       </div>
 
-      <InboxClient messages={messages ?? []} me={me ?? null} myLeads={myLeads ?? []} />
+      <InboxClient messages={messages ?? []} me={me ?? null} myLeads={myLeads ?? []} unreadIds={unreadIds} />
     </div>
   );
 }

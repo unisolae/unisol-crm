@@ -108,10 +108,10 @@ export default async function Dashboard() {
   const unkPct = totalLeads ? Math.round((unknownLeads / totalLeads) * 100) : 0;
 
   const STATS = [
-    { label: 'Σύνολο leads', icon: 'ti-target', value: totalLeads ?? 0, barW: 100, barC: '#0b5468' },
-    { label: 'Ενεργά', icon: 'ti-flame', value: activeLeads ?? 0, sub: `${pct}% του συνόλου`, subC: '#0f6e56', barW: pct, barC: '#1d9e75' },
-    { label: 'Αδιερεύνητα', icon: 'ti-search', value: unknownLeads ?? 0, sub: 'χρειάζονται έλεγχο', subC: '#db0032', barW: unkPct, barC: '#db0032' },
-    { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#64757c', barW: 70, barC: '#d6a829' },
+    { label: 'Σύνολο leads', icon: 'ti-target', value: totalLeads ?? 0, barW: 100, barC: '#0b5468', href: '/leads?scope=all' },
+    { label: 'Ενεργά', icon: 'ti-flame', value: activeLeads ?? 0, sub: `${pct}% του συνόλου`, subC: '#0f6e56', barW: pct, barC: '#1d9e75', href: '/leads?scope=all&status=active' },
+    { label: 'Αδιερεύνητα', icon: 'ti-search', value: unknownLeads ?? 0, sub: 'χρειάζονται έλεγχο', subC: '#db0032', barW: unkPct, barC: '#db0032', href: '/leads?scope=all&status=unknown' },
+    { label: 'Pipeline', icon: 'ti-coin-euro', value: `${(pipelineSum / 1000).toLocaleString('el-GR', { maximumFractionDigits: 0 })}k€`, sub: 'εκτιμώμενη αξία', subC: '#64757c', barW: 70, barC: '#d6a829', href: '/leads?scope=all&status=active' },
   ];
 
   // Προγραμματισμένες ενέργειές μου που είναι εκπρόθεσμες ή λήγουν σήμερα
@@ -127,11 +127,11 @@ export default async function Dashboard() {
   }).length;
 
   const GLANCE = [
-    { icon: 'ti-checkbox', bg: '#dcefe4', fg: '#0f6e56', n: myActionsWeek ?? 0, text: 'ενέργειες αυτή την εβδομάδα' },
-    { icon: 'ti-calendar-clock', bg: '#e6eef1', fg: '#003d4c', n: plannedDueCount, text: 'προγραμματισμένες ενέργειες λήγουν' },
-    { icon: 'ti-clock', bg: '#faeeda', fg: '#633806', n: todayCount, text: 'εκκρεμότητες λήγουν σήμερα' },
-    { icon: 'ti-inbox', bg: '#d6ecf4', fg: '#0c5a77', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα' },
-    { icon: 'ti-user-plus', bg: '#fbe4ea', fg: '#b00230', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα' },
+    { icon: 'ti-checkbox', bg: '#dcefe4', fg: '#0f6e56', n: myActionsWeek ?? 0, text: 'ενέργειες αυτή την εβδομάδα', href: `/actions?owner=${user.id}` },
+    { icon: 'ti-calendar-clock', bg: '#e6eef1', fg: '#003d4c', n: plannedDueCount, text: 'προγραμματισμένες ενέργειες λήγουν', href: `/actions?owner=${user.id}&status=planned` },
+    { icon: 'ti-clock', bg: '#faeeda', fg: '#633806', n: todayCount, text: 'εκκρεμότητες λήγουν σήμερα', href: '/inbox' },
+    { icon: 'ti-inbox', bg: '#d6ecf4', fg: '#0c5a77', n: unreadMsgs ?? 0, text: 'αδιάβαστα μηνύματα', href: '/inbox' },
+    { icon: 'ti-user-plus', bg: '#fbe4ea', fg: '#b00230', n: unassignedLeads ?? 0, text: 'αδιάθετα leads στην ομάδα', href: '/leads?scope=all' },
   ];
 
   return (
@@ -146,7 +146,7 @@ export default async function Dashboard() {
 
       <div className="stat-grid">
         {STATS.map((s) => (
-          <div key={s.label} className="stat stat-rich">
+          <Link key={s.label} href={s.href} className="stat stat-rich stat-link">
             <i className={`ti ${s.icon} stat-ic`} aria-hidden="true" />
             <div className="label">{s.label}</div>
             <div className="value">{s.value}</div>
@@ -154,7 +154,7 @@ export default async function Dashboard() {
             <div className="stat-bar">
               <i style={{ width: `${s.barW}%`, background: s.barC }} />
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -175,14 +175,15 @@ export default async function Dashboard() {
           </div>
           <div className="glance-list">
             {GLANCE.map((g, i) => (
-              <div key={i} className="glance-row">
+              <Link key={i} href={g.href} className="glance-row glance-link">
                 <span className="glance-ic" style={{ background: g.bg, color: g.fg }}>
                   <i className={`ti ${g.icon}`} aria-hidden="true" />
                 </span>
                 <div>
                   <b>{g.n}</b> {g.text}
                 </div>
-              </div>
+                <i className="ti ti-chevron-right glance-chev" aria-hidden="true" />
+              </Link>
             ))}
           </div>
         </div>

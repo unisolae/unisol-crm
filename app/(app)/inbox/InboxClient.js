@@ -46,13 +46,16 @@ function boxOf(m, me) {
   return 'all';
 }
 
-export default function InboxClient({ messages, me, myLeads = [] }) {
+export default function InboxClient({ messages, me, myLeads = [], unreadIds = [] }) {
   const [box, setBox] = useState('in');
   const [statusFilter, setStatusFilter] = useState('open'); // open = εκτός done/cancelled
-  const [sortBy, setSortBy] = useState('urgency');
+  const [sortBy, setSortBy] = useState('recent');
   const [pending, start] = useTransition();
   const [rows, setRows] = useState(messages);
   const [linkingId, setLinkingId] = useState(null); // ποιο μήνυμα συνδέεται τώρα
+
+  // Αδιάβαστα «αυτής της φοράς» — ξεχωρίζουν οπτικά και μπαίνουν πρώτα.
+  const unreadSet = new Set(unreadIds);
 
   function runAction(fn, id) {
     start(async () => {
@@ -112,6 +115,11 @@ export default function InboxClient({ messages, me, myLeads = [] }) {
   }
 
   view = [...view].sort((a, b) => {
+    // Αδιάβαστα πρώτα (μόνο αυτή τη φορά — μαρκάρονται διαβασμένα στο άνοιγμα)
+    const ua = unreadSet.has(a.id);
+    const ub = unreadSet.has(b.id);
+    if (ua !== ub) return ua ? -1 : 1;
+
     if (sortBy === 'recent')
       return new Date(b.created_at) - new Date(a.created_at);
     if (sortBy === 'priority') {
@@ -160,8 +168,8 @@ export default function InboxClient({ messages, me, myLeads = [] }) {
             <option value="done">Ολοκληρωμένα</option>
           </select>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="recent">Κατά λήψη</option>
             <option value="urgency">Επείγον</option>
-            <option value="recent">Πιο πρόσφατα</option>
             <option value="priority">Προτεραιότητα</option>
             <option value="lead">Κατά lead</option>
           </select>
@@ -177,14 +185,18 @@ export default function InboxClient({ messages, me, myLeads = [] }) {
           const overdue = mins < 0;
           const today = mins >= 0 && mins < 60 * 24;
           const dueCls = overdue ? 'due-over' : today ? 'due-today' : 'due-future';
+          const unread = unreadSet.has(m.id);
           return (
-            <div key={m.id} className="inbox-row">
+            <div key={m.id} className={unread ? 'inbox-row unread' : 'inbox-row'}>
               <span className={`msg-tag ${TYPE_CLS[m.type] || ''}`}>
                 {MESSAGE_TYPE[m.type] || m.type}
               </span>
 
               <div className="inbox-main">
-                <div className="inbox-body">{m.body || '—'}</div>
+                <div className="inbox-body">
+                  {unread && <span className="unread-tag">νέο</span>}
+                  {m.body || '—'}
+                </div>
                 <div className="inbox-meta">
                   {box === 'out' ? (
                     <span className="chip">

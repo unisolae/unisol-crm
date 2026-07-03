@@ -2903,3 +2903,63 @@ input[type='checkbox'].msg-check {
     cursor: pointer;
   }
 }
+
+/* ================================================================
+   Αδιάβαστα μηνύματα + clickable dashboard (επισκόπηση)
+   ================================================================ */
+
+/* --- Αδιάβαστο μήνυμα: ξεχωρίζει (μόνο την πρώτη φορά που ανοίγω) --- */
+.inbox-row.unread {
+  background: #f0f7fb;
+  border-left: 3px solid var(--ink);
+  padding-left: 13px;
+}
+.unread-tag {
+  display: inline-block;
+  vertical-align: 1px;
+  margin-right: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--red);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.inbox-row.unread .inbox-body {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* --- Clickable stat cards --- */
+a.stat-link {
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.05s;
+}
+a.stat-link:hover {
+  border-color: var(--ink);
+  box-shadow: 0 3px 10px rgba(0, 61, 76, 0.1);
+}
+a.stat-link:active {
+  transform: translateY(1px);
+}
+
+/* --- Clickable glance rows --- */
+a.glance-row {
+  text-decoration: none;
+  padding: 8px 6px;
+  margin: 0 -6px;
+  border-radius: 10px;
+  transition: background 0.12s;
+}
+a.glance-row:hover {
+  background: var(--cream);
+}
+.glance-chev {
+  margin-left: auto;
+  font-size: 17px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
