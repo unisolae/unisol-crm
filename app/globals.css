@@ -2201,3 +2201,38 @@ h3,
   font-size: 13px;
   color: var(--muted);
 }
+
+/* Ομάδα κουμπιών σε κεφαλίδα σελίδας */
+.head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Βοήθεια στηλών στο import επαφών */
+.cols-help {
+  margin: 4px 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.cols-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.cols-help p {
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
+/* Δείγμα γραμμών στην προεπισκόπηση import */
+.preview-sample {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.preview-sample li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line-soft);
+}

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { toTimestamp } from '@/lib/datetime';
 
 const COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -40,7 +41,7 @@ export async function createMessage(formData) {
     third_party_phone: clean(formData.get('third_party_phone')),
     body: clean(formData.get('body')),
     priority: clean(formData.get('priority')) || 'medium',
-    due_at: clean(formData.get('due_at')),
+    due_at: toTimestamp(formData.get('due_at')),
     status: 'new',
   };
 

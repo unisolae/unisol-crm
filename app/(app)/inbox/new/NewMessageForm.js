@@ -7,6 +7,7 @@ import {
   MESSAGE_PRIORITY,
   RECIPIENT_GROUP,
 } from '@/lib/labels';
+import GreekDateTime from '@/app/components/GreekDateTime';
 
 export default function NewMessageForm({ users, leads, action }) {
   // Επιλογή παραλήπτη: 'user' (συγκεκριμένος) ή 'group' (ομάδα/ρόλος)
@@ -123,7 +124,7 @@ export default function NewMessageForm({ users, leads, action }) {
 
         <div className="field">
           <label>Υπενθύμιση (ημ/ώρα)</label>
-          <input name="due_at" type="datetime-local" />
+          <GreekDateTime name="due_at" />
         </div>
       </div>
 

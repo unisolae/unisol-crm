@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import GreekDateTime from '@/app/components/GreekDateTime';
 
 // Χρησιμοποιείται και σε lead και σε συνεργάτη — δέχεται το server action ως prop.
 export default function ActionForm({ action }) {
@@ -73,7 +74,7 @@ export default function ActionForm({ action }) {
       {planned ? (
         <div className="field">
           <label>Πότε — ημ/ώρα</label>
-          <input name="scheduled_at" type="datetime-local" required />
+          <GreekDateTime name="scheduled_at" required />
           <span className="field-hint">
             Θα εμφανιστεί ως επερχόμενη στο ημερολόγιο και στο χρονολόγιο.
           </span>
@@ -106,7 +107,7 @@ export default function ActionForm({ action }) {
           {hasNext && (
             <div className="field">
               <label>Επόμενη ενέργεια — ημ/ώρα</label>
-              <input name="next_action_at" type="datetime-local" />
+              <GreekDateTime name="next_action_at" />
               <span className="field-hint">
                 Θα δημιουργηθεί αυτόματα υπενθύμιση στα εισερχόμενά σου.
               </span>

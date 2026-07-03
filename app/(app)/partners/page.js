@@ -37,9 +37,14 @@ export default async function PartnersPage({ searchParams }) {
           <h1>Συνεργάτες</h1>
           <p>{partners?.length ?? 0} εγγραφές</p>
         </div>
-        <Link className="btn-primary" href="/partners/new">
-          + Νέος συνεργάτης
-        </Link>
+        <div className="head-actions">
+          <Link className="btn-ghost" href="/partners/import">
+            Εισαγωγή Excel
+          </Link>
+          <Link className="btn-primary" href="/partners/new">
+            + Νέος συνεργάτης
+          </Link>
+        </div>
       </div>
 
       <PartnersFilters />

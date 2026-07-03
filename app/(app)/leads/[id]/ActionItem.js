@@ -2,14 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-
-function toLocalInput(d) {
-  if (!d) return '';
-  const dt = new Date(d);
-  const off = dt.getTimezoneOffset();
-  const local = new Date(dt.getTime() - off * 60000);
-  return local.toISOString().slice(0, 16);
-}
+import GreekDateTime from '@/app/components/GreekDateTime';
 
 export default function ActionItem({ action, updateAction, deleteAction, completeAction }) {
   const [editing, setEditing] = useState(false);
@@ -81,12 +74,7 @@ export default function ActionItem({ action, updateAction, deleteAction, complet
           {planned ? (
             <div className="field">
               <label>Πότε — ημ/ώρα</label>
-              <input
-                name="scheduled_at"
-                type="datetime-local"
-                defaultValue={toLocalInput(action.scheduled_at)}
-                required
-              />
+              <GreekDateTime name="scheduled_at" defaultValue={action.scheduled_at} required />
             </div>
           ) : (
             <>
@@ -113,11 +101,7 @@ export default function ActionItem({ action, updateAction, deleteAction, complet
               {hasNext && (
                 <div className="field">
                   <label>Επόμενη ενέργεια — ημ/ώρα</label>
-                  <input
-                    name="next_action_at"
-                    type="datetime-local"
-                    defaultValue={toLocalInput(action.next_action_at)}
-                  />
+                  <GreekDateTime name="next_action_at" defaultValue={action.next_action_at} />
                 </div>
               )}
             </>

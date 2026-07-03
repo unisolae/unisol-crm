@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { toTimestamp } from '@/lib/datetime';
 
 const COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -55,7 +56,7 @@ async function insertAction(supabase, { leadId, partnerId, formData }) {
 
   // --- Προγραμματισμένη (θα γίνει) ---
   if (kind === 'planned') {
-    const scheduledAt = clean(formData.get('scheduled_at'));
+    const scheduledAt = toTimestamp(formData.get('scheduled_at'));
     const { error } = await supabase.from('actions').insert({
       company_id: COMPANY_ID,
       lead_id: leadId ?? null,
@@ -74,7 +75,7 @@ async function insertAction(supabase, { leadId, partnerId, formData }) {
   // --- Ολοκληρωμένη (έγινε) ---
   const result = clean(formData.get('result'));
   const isFinal = formData.get('is_final') === 'on';
-  const nextAt = clean(formData.get('next_action_at'));
+  const nextAt = toTimestamp(formData.get('next_action_at'));
 
   const { error } = await supabase.from('actions').insert({
     company_id: COMPANY_ID,
@@ -172,11 +173,11 @@ export async function updateAction(actionId, formData) {
     notes: clean(formData.get('notes')),
   };
   if (formKind === 'planned') {
-    patch.scheduled_at = clean(formData.get('scheduled_at'));
+    patch.scheduled_at = toTimestamp(formData.get('scheduled_at'));
   } else {
     patch.result = clean(formData.get('result'));
     patch.is_final = formData.get('is_final') === 'on';
-    patch.next_action_at = clean(formData.get('next_action_at'));
+    patch.next_action_at = toTimestamp(formData.get('next_action_at'));
   }
 
   const { data: existing, error: e0 } = await supabase
