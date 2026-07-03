@@ -2253,3 +2253,17 @@ h3,
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Ένδειξη «φόρτωσης» στο MultiSelect κατά την ανανέωση της λίστας */
+.ms-pending .ms-trigger {
+  opacity: 0.7;
+}
+.ms-spin {
+  display: inline-block;
+  animation: ms-rotate 0.7s linear infinite;
+}
+@keyframes ms-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
