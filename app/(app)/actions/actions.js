@@ -76,6 +76,7 @@ async function insertAction(supabase, { leadId, partnerId, formData }) {
   const result = clean(formData.get('result'));
   const isFinal = formData.get('is_final') === 'on';
   const nextAt = toTimestamp(formData.get('next_action_at'));
+  const actedAt = toTimestamp(formData.get('acted_at')) || new Date().toISOString();
 
   const { error } = await supabase.from('actions').insert({
     company_id: COMPANY_ID,
@@ -88,7 +89,7 @@ async function insertAction(supabase, { leadId, partnerId, formData }) {
     next_action_at: nextAt,
     notes,
     status: 'done',
-    acted_at: new Date().toISOString(),
+    acted_at: actedAt,
   });
   if (error) return { error: error.message };
 
@@ -178,6 +179,8 @@ export async function updateAction(actionId, formData) {
     patch.result = clean(formData.get('result'));
     patch.is_final = formData.get('is_final') === 'on';
     patch.next_action_at = toTimestamp(formData.get('next_action_at'));
+    const actedAt = toTimestamp(formData.get('acted_at'));
+    if (actedAt) patch.acted_at = actedAt;
   }
 
   const { data: existing, error: e0 } = await supabase
