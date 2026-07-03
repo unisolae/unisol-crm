@@ -44,23 +44,32 @@ export default function MultiSelect({ label, options, selected, onChange }) {
         <span className={`ms-caret${pending ? ' ms-spin' : ''}`}>{pending ? '↻' : '▾'}</span>
       </button>
       {open && (
-        <div className="ms-pop">
-          {local.length > 0 && (
-            <button type="button" className="ms-clear" onClick={() => apply([])}>
-              Καθαρισμός
-            </button>
-          )}
-          {options.map((opt) => (
-            <label key={opt.value} className="ms-item">
-              <input
-                type="checkbox"
-                checked={local.includes(opt.value)}
-                onChange={() => toggle(opt.value)}
-              />
-              <span>{opt.label}</span>
-            </label>
-          ))}
-        </div>
+        <>
+          <div className="ms-scrim" onClick={() => setOpen(false)} />
+          <div className="ms-pop">
+            <div className="ms-head">
+              <span>{label}</span>
+              <button type="button" className="ms-done" onClick={() => setOpen(false)}>
+                Έτοιμο
+              </button>
+            </div>
+            {local.length > 0 && (
+              <button type="button" className="ms-clear" onClick={() => apply([])}>
+                Καθαρισμός
+              </button>
+            )}
+            {options.map((opt) => (
+              <label key={opt.value} className="ms-item">
+                <input
+                  type="checkbox"
+                  checked={local.includes(opt.value)}
+                  onChange={() => toggle(opt.value)}
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
