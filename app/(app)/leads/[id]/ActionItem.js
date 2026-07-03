@@ -79,6 +79,10 @@ export default function ActionItem({ action, updateAction, deleteAction, complet
           ) : (
             <>
               <div className="field">
+                <label>Πότε έγινε — ημ/ώρα</label>
+                <GreekDateTime name="acted_at" defaultValue={action.acted_at} />
+              </div>
+              <div className="field">
                 <label>Αποτέλεσμα</label>
                 <input name="result" type="text" defaultValue={action.result || ''} />
               </div>

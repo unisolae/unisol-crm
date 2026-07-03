@@ -82,6 +82,11 @@ export default function ActionForm({ action }) {
       ) : (
         <>
           <div className="field">
+            <label>Πότε έγινε — ημ/ώρα</label>
+            <GreekDateTime name="acted_at" defaultValue={new Date().toISOString()} />
+          </div>
+
+          <div className="field">
             <label>Αποτέλεσμα</label>
             <input name="result" type="text" placeholder="π.χ. Ζήτησε προσφορά, ραντεβού…" />
           </div>
