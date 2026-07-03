@@ -32,14 +32,16 @@ export default async function ActionsPage({ searchParams }) {
   if (ownerFilter !== 'all') query = query.eq('salesperson_id', ownerFilter);
   if (statusFilter !== 'all') query = query.eq('status', statusFilter);
 
-  const { data: raw } = await query;
-  const actions = (raw ?? []).slice().sort(actionSort);
-
-  const { data: salespeople } = await supabase
-    .from('profiles')
-    .select('id, full_name')
-    .eq('is_salesperson', true)
-    .order('full_name');
+  const [rawRes, spRes] = await Promise.all([
+    query,
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('is_salesperson', true)
+      .order('full_name'),
+  ]);
+  const actions = (rawRes.data ?? []).slice().sort(actionSort);
+  const salespeople = spRes.data;
 
   const fmtDateTime = (d) =>
     d
