@@ -7,7 +7,6 @@ import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
 import ActionItem from './ActionItem';
 import LeadPartners from './LeadPartners';
-import { partnerName } from '@/lib/labels';
 
 // Ταξινόμηση χρονολογίου: προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
 function actionSort(a, b) {
@@ -73,14 +72,6 @@ export default async function LeadDetail({ params, searchParams }) {
     .eq('lead_id', id);
   const linkedPartners = (partnerLinks ?? []).map((r) => r.partner).filter(Boolean);
 
-  const { data: allPartnersRaw } = await supabase
-    .from('partners')
-    .select('id, full_name, company_name, type')
-    .eq('is_active', true);
-  const allPartners = (allPartnersRaw ?? []).sort((a, b) =>
-    partnerName(a).localeCompare(partnerName(b), 'el')
-  );
-
   const st = STATUS[lead.crm_status] ?? STATUS.unknown;
   const saveLead = updateLead.bind(null, id);
   const addAction = createAction.bind(null, id);
@@ -140,7 +131,7 @@ export default async function LeadDetail({ params, searchParams }) {
 
       <section className="card">
         <h2>Συνεργάτες έργου</h2>
-        <LeadPartners leadId={id} linked={linkedPartners} all={allPartners} />
+        <LeadPartners leadId={id} linked={linkedPartners} />
       </section>
 
       <section className="card actions-card">

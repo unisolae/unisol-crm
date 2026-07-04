@@ -116,3 +116,33 @@ export async function unlinkPartner(leadId, partnerId) {
   revalidatePath(`/partners/${partnerId}`);
   return { ok: true };
 }
+
+// --- Αναζήτηση συνεργατών στον server (όνομα / επωνυμία / κωδικός ERP) -------
+// Λύνει το όριο 1000 γραμμών: δεν φορτώνουμε όλους τους συνεργάτες στον client.
+export async function searchPartners(query) {
+  const supabase = await createClient();
+  const q = (query || '').trim();
+
+  let req = supabase
+    .from('partners')
+    .select('id, full_name, company_name, type, erp_code')
+    .eq('is_active', true)
+    .limit(20);
+
+  if (q) {
+    // Καθαρισμός χαρακτήρων που σπάνε το φίλτρο .or του PostgREST
+    const safe = q.replace(/[,()%]/g, ' ').trim();
+    if (safe) {
+      const like = `%${safe}%`;
+      req = req
+        .or(`full_name.ilike.${like},company_name.ilike.${like},erp_code.ilike.${like}`)
+        .order('full_name', { ascending: true });
+    }
+  } else {
+    req = req.order('created_at', { ascending: false });
+  }
+
+  const { data, error } = await req;
+  if (error) return { error: error.message };
+  return { partners: data ?? [] };
+}

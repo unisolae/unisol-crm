@@ -6,18 +6,22 @@ import {
   createPartnerInline,
   linkPartner,
   unlinkPartner,
+  searchPartners,
 } from '@/app/(app)/partners/actions';
 import { PARTNER_TYPE, partnerName, toOptions } from '@/lib/labels';
 
 const TYPE_OPTIONS = toOptions(PARTNER_TYPE);
 
-export default function LeadPartners({ leadId, linked, all }) {
+export default function LeadPartners({ leadId, linked }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [newType, setNewType] = useState('crew');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const ref = useRef(null);
+  const reqIdRef = useRef(0);
 
   useEffect(() => {
     function onDoc(e) {
@@ -27,23 +31,30 @@ export default function LeadPartners({ leadId, linked, all }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
+  // Αναζήτηση στον server (debounced), με προστασία από stale απαντήσεις
+  useEffect(() => {
+    const term = q.trim();
+    if (term === '') {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const id = ++reqIdRef.current;
+    const t = setTimeout(async () => {
+      const res = await searchPartners(term);
+      if (id !== reqIdRef.current) return; // ήρθε νεότερο ερώτημα
+      setLoading(false);
+      setResults(res?.error ? [] : res.partners || []);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
   const linkedIds = useMemo(() => new Set(linked.map((p) => p.id)), [linked]);
-
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return all.filter(
-      (p) =>
-        !linkedIds.has(p.id) &&
-        (t === '' ||
-          partnerName(p).toLowerCase().includes(t) ||
-          (p.company_name || '').toLowerCase().includes(t))
-    );
-  }, [q, all, linkedIds]);
-
-  const exactExists = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return t !== '' && all.some((p) => partnerName(p).toLowerCase() === t);
-  }, [q, all]);
+  const shown = results.filter((p) => !linkedIds.has(p.id)).slice(0, 12);
+  const exactExists =
+    q.trim() !== '' &&
+    results.some((p) => partnerName(p).toLowerCase() === q.trim().toLowerCase());
 
   function doLink(partnerId) {
     start(async () => {
@@ -96,7 +107,7 @@ export default function LeadPartners({ leadId, linked, all }) {
         <input
           type="text"
           value={q}
-          placeholder="Πρόσθεσε συνεργάτη — γράψε όνομα…"
+          placeholder="Πρόσθεσε συνεργάτη — όνομα, επωνυμία ή κωδικός…"
           onFocus={() => setOpen(true)}
           onChange={(e) => {
             setQ(e.target.value);
@@ -105,20 +116,30 @@ export default function LeadPartners({ leadId, linked, all }) {
         />
         {open && (
           <div className="lp-pop">
-            {filtered.slice(0, 8).map((p) => (
-              <button
-                type="button"
-                key={p.id}
-                className="lp-opt"
-                onClick={() => doLink(p.id)}
-                disabled={pending}
-              >
-                <span>{partnerName(p)}</span>
-                <small>{PARTNER_TYPE[p.type] || ''}</small>
-              </button>
-            ))}
+            {loading && <div className="lp-hint">Αναζήτηση…</div>}
 
-            {q.trim() !== '' && !exactExists && (
+            {!loading &&
+              shown.map((p) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  className="lp-opt"
+                  onClick={() => doLink(p.id)}
+                  disabled={pending}
+                >
+                  <span>{partnerName(p)}</span>
+                  <small>
+                    {PARTNER_TYPE[p.type] || ''}
+                    {p.erp_code ? ` · ${p.erp_code}` : ''}
+                  </small>
+                </button>
+              ))}
+
+            {!loading && q.trim() !== '' && shown.length === 0 && (
+              <div className="lp-hint">Δεν βρέθηκε συνεργάτης «{q.trim()}».</div>
+            )}
+
+            {!loading && q.trim() !== '' && !exactExists && (
               <div className="lp-create">
                 <span>Νέος: «{q.trim()}»</span>
                 <select value={newType} onChange={(e) => setNewType(e.target.value)}>
@@ -134,8 +155,8 @@ export default function LeadPartners({ leadId, linked, all }) {
               </div>
             )}
 
-            {filtered.length === 0 && q.trim() === '' && (
-              <div className="lp-hint">Γράψε για αναζήτηση ή δημιουργία νέου συνεργάτη.</div>
+            {q.trim() === '' && (
+              <div className="lp-hint">Γράψε όνομα, επωνυμία ή κωδικό ERP για αναζήτηση.</div>
             )}
           </div>
         )}
