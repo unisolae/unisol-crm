@@ -109,7 +109,16 @@ export default async function LeadDetail({ params, searchParams }) {
         <section className="card">
           <h2>Στοιχεία {lead.source === 'manual' ? 'έργου' : 'άδειας'}</h2>
           <Row label="Περιγραφή" value={lead.project_desc} />
-          <Row label="Μηχανικός" value={lead.engineer} />
+          <Row
+            label="Μηχανικός"
+            value={
+              lead.engineer_id ? (
+                <Link href={`/engineers/${lead.engineer_id}`}>{lead.engineer}</Link>
+              ) : (
+                lead.engineer
+              )
+            }
+          />
           <Row label="Διεύθυνση" value={address} />
           <Row label="Πόλη" value={lead.city} />
           <Row label="Περιοχή" value={lead.municipality} />

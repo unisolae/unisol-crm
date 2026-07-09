@@ -142,6 +142,10 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
                   <i className="ti ti-users" aria-hidden="true" />
                   Συνεργάτες
                 </Link>
+                <Link href="/engineers" className="bsheet-row">
+                  <i className="ti ti-helmet" aria-hidden="true" />
+                  Μηχανικοί
+                </Link>
                 <Link href="/import" className="bsheet-row">
                   <i className="ti ti-upload" aria-hidden="true" />
                   Εισαγωγή leads

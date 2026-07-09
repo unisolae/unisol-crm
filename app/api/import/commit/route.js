@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { parseLeadsExcel } from '@/lib/parseExcel';
+import { ensureEngineers } from '@/lib/engineers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { guardAdmin } from '@/lib/guardAdmin';
 import { PREFECTURES } from '@/lib/prefectures';
@@ -36,9 +37,23 @@ export async function POST(request) {
   const admin = createAdminClient();
   const importedAt = new Date().toISOString();
 
+  // Μηχανικοί: αυτόματη δημιουργία/αντιστοίχιση από το «Διαχειριστής Αίτησης».
+  // Αν κάτι πάει στραβά εδώ, το import ΔΕΝ μπλοκάρει — απλώς μένουν χωρίς σύνδεση.
+  let engineerIdByRaw = new Map();
+  try {
+    engineerIdByRaw = await ensureEngineers(
+      admin,
+      guard.companyId,
+      rows.map((r) => r.engineer)
+    );
+  } catch (e) {
+    console.error('ensureEngineers failed:', e?.message || e);
+  }
+
   // Εμπλουτισμός κάθε γραμμής με τα κοινά πεδία
   const payload = rows.map((r) => ({
     ...r,
+    engineer_id: engineerIdByRaw.get(r.engineer) ?? null,
     company_id: guard.companyId,
     source: 'ydom_import',
     crm_status: 'unknown',
