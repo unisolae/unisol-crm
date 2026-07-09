@@ -7,6 +7,7 @@ import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
 import ActionItem from './ActionItem';
 import LeadPartners from './LeadPartners';
+import { NEGATIVE_REASON } from '@/lib/labels';
 
 // Ταξινόμηση χρονολογίου: προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
 function actionSort(a, b) {
@@ -100,6 +101,9 @@ export default async function LeadDetail({ params, searchParams }) {
           <h1>{lead.project_desc || 'Lead'}</h1>
           <p>
             <span className={`badge ${st.cls}`}>{st.label}</span>
+            {lead.crm_status === 'negative' && NEGATIVE_REASON[lead.negative_reason]
+              ? `  ·  ${NEGATIVE_REASON[lead.negative_reason]}`
+              : ''}
             {lead.source === 'manual' ? '  ·  Χειροκίνητη εισαγωγή' : '  ·  Από άδεια (ΥΔΟΜ)'}
           </p>
         </div>

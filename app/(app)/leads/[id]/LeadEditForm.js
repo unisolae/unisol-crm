@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { PREFECTURES } from '@/lib/prefectures';
-import { PRIORITY, LEAD_TYPE } from '@/lib/labels';
+import { PRIORITY, LEAD_TYPE, NEGATIVE_REASON } from '@/lib/labels';
 
 function SaveButton() {
   const { pending } = useFormStatus();
@@ -14,18 +15,38 @@ function SaveButton() {
 }
 
 export default function LeadEditForm({ lead, salespeople, action }) {
+  const [status, setStatus] = useState(lead.crm_status);
+
   return (
     <form action={action} className="edit-form">
       <div className="form-grid">
         <div className="field">
           <label>Κατάσταση CRM</label>
-          <select name="crm_status" defaultValue={lead.crm_status}>
+          <select
+            name="crm_status"
+            defaultValue={lead.crm_status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
             <option value="unknown">Άγνωστη</option>
             <option value="active">Ενεργή</option>
             <option value="closed">Κλειστή</option>
             <option value="negative">Αρνητική</option>
           </select>
         </div>
+
+        {status === 'negative' && (
+          <div className="field">
+            <label>Λόγος αρνητικής έκβασης</label>
+            <select name="negative_reason" defaultValue={lead.negative_reason ?? ''}>
+              <option value="">— Επιλογή λόγου —</option>
+              {Object.entries(NEGATIVE_REASON).map(([v, label]) => (
+                <option key={v} value={v}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="field">
           <label>Πωλητής</label>

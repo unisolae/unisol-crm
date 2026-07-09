@@ -22,10 +22,14 @@ function num(v) {
 export async function createLead(formData) {
   const supabase = await createClient();
 
+  const crmStatus = clean(formData.get('crm_status')) || 'unknown';
+
   const payload = {
     company_id: COMPANY_ID,
     source: 'manual',
-    crm_status: clean(formData.get('crm_status')) || 'unknown',
+    crm_status: crmStatus,
+    negative_reason:
+      crmStatus === 'negative' ? clean(formData.get('negative_reason')) : null,
     project_desc: clean(formData.get('project_desc')),
     associate: clean(formData.get('associate')),
     address_street: clean(formData.get('address_street')),
@@ -56,8 +60,13 @@ export async function createLead(formData) {
 export async function updateLead(id, formData) {
   const supabase = await createClient();
 
+  const crmStatus = clean(formData.get('crm_status')) || 'unknown';
+
   const payload = {
-    crm_status: clean(formData.get('crm_status')) || 'unknown',
+    crm_status: crmStatus,
+    // Λόγος αρνητικής έκβασης: κρατιέται μόνο όταν η κατάσταση είναι «Αρνητική».
+    negative_reason:
+      crmStatus === 'negative' ? clean(formData.get('negative_reason')) : null,
     salesperson_id: clean(formData.get('salesperson_id')),
     prefecture: clean(formData.get('prefecture')),
     priority: clean(formData.get('priority')),

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CRM_STATUS } from '@/lib/labels';
+import { updateEngineerContact } from '../actions';
+import EngineerContactForm from './EngineerContactForm';
 
 export default async function EngineerDetail({ params }) {
   const { id } = await params;
@@ -40,6 +42,7 @@ export default async function EngineerDetail({ params }) {
   ];
 
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('el-GR') : '—');
+  const saveContact = updateEngineerContact.bind(null, id);
   const sub = [
     engineer.specialty,
     engineer.tee_number ? `Α.Μ. ΤΕΕ ${engineer.tee_number}` : null,
@@ -67,6 +70,11 @@ export default async function EngineerDetail({ params }) {
           </div>
         ))}
       </div>
+
+      <section className="card">
+        <h2>Στοιχεία επικοινωνίας</h2>
+        <EngineerContactForm engineer={engineer} action={saveContact} />
+      </section>
 
       <section className="card">
         <h2>Άδειες</h2>
