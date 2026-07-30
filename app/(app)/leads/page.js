@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { getAccess } from '@/lib/access';
 import LeadsFilters from './LeadsFilters';
 import LeadsTabs from './LeadsTabs';
 import LeadsScope from './LeadsScope';
@@ -17,6 +18,9 @@ export default async function LeadsPage({ searchParams }) {
   const scope = sp.scope === 'all' ? 'all' : 'mine';
 
   const supabase = await createClient();
+
+  const acc = await getAccess(supabase);
+  const isPartner = acc.isPartner;
 
   // Παράλληλα: έλεγχος χρήστη + λίστα πωλητών (ανεξάρτητα μεταξύ τους)
   const [
@@ -45,8 +49,9 @@ export default async function LeadsPage({ searchParams }) {
 
   // Εφαρμόζει όλα τα φίλτρα ΕΚΤΟΣ από το status (για τους μετρητές των tabs)
   function applyBaseFilters(query) {
-    // scope: "δικά μου" = ανατεθειμένα σε μένα Ή αδιάθετα
-    if (scope === 'mine') {
+    // scope: "δικά μου" = ανατεθειμένα σε μένα Ή αδιάθετα.
+    // Για συνεργάτες δεν έχει νόημα (το RLS ήδη περιορίζει στα leads τους).
+    if (!isPartner && scope === 'mine') {
       query = query.or(`salesperson_id.eq.${user.id},salesperson_id.is.null`);
     }
     // Αν ο χρήστης επιλέξει ρητά πωλητές από το φίλτρο, αυτό υπερισχύει
@@ -105,12 +110,14 @@ export default async function LeadsPage({ searchParams }) {
           <h1>Leads</h1>
           <p>{leads?.length ?? 0} εγγραφές</p>
         </div>
-        <Link className="btn-primary" href="/leads/new">
-          + Νέο lead
-        </Link>
+        {!isPartner && (
+          <Link className="btn-primary" href="/leads/new">
+            + Νέο lead
+          </Link>
+        )}
       </div>
 
-      <LeadsScope current={scope} />
+      {!isPartner && <LeadsScope current={scope} />}
 
       <LeadsTabs counts={counts} />
 
@@ -146,7 +153,11 @@ export default async function LeadsPage({ searchParams }) {
                   </td>
                   <td>{l.associate || (l.source === 'manual' ? '—' : '')}</td>
                   <td className="cell-edit">
-                    <InlineSalesperson id={l.id} value={l.salesperson_id} salespeople={salespeople ?? []} />
+                    {isPartner ? (
+                      <span>{l.salespeople?.name || '—'}</span>
+                    ) : (
+                      <InlineSalesperson id={l.id} value={l.salesperson_id} salespeople={salespeople ?? []} />
+                    )}
                   </td>
                   <td className="cell-edit">
                     <InlineType id={l.id} value={l.lead_type} />

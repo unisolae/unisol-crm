@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import { normalizeName } from '@/lib/engineers';
 import EngineersFilters from './EngineersFilters';
 
@@ -8,6 +9,7 @@ export default async function EngineersPage({ searchParams }) {
   const q = (sp.q ?? '').trim();
 
   const supabase = await createClient();
+  await requireInternal(supabase);
 
   let query = supabase
     .from('engineers')

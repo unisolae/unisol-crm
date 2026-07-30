@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import DashboardTasks from './DashboardTasks';
 
 function startOfWeek() {
@@ -12,6 +13,7 @@ function startOfWeek() {
 
 export default async function Dashboard() {
   const supabase = await createClient();
+  await requireInternal(supabase);
 
   const {
     data: { user },

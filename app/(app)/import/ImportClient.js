@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PREFECTURES } from '@/lib/prefectures';
 
-export default function ImportClient() {
+export default function ImportClient({ partnerOrgs = [], salespeople = [] }) {
   const router = useRouter();
   const [prefecture, setPrefecture] = useState('');
+  const [partnerOrgId, setPartnerOrgId] = useState('');
+  const [salespersonId, setSalespersonId] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -47,6 +49,8 @@ export default function ImportClient() {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('prefecture', prefecture);
+      if (partnerOrgId) fd.append('partner_org_id', partnerOrgId);
+      if (salespersonId) fd.append('salesperson_id', salespersonId);
       const res = await fetch('/api/import/commit', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Σφάλμα εισαγωγής.');
@@ -88,7 +92,31 @@ export default function ImportClient() {
         </div>
 
         <div className="field">
-          <label>2. Αρχείο Excel (.xlsx) *</label>
+          <label>2. Ανάθεση σε συνεργαζόμενη εταιρεία (προαιρετικό)</label>
+          <select value={partnerOrgId} onChange={(e) => setPartnerOrgId(e.target.value)}>
+            <option value="">— Καμία (μόνο εσωτερικά) —</option>
+            {partnerOrgs.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+          <span className="field-hint">
+            Αν επιλεγεί, όλες οι νέες εγγραφές του αρχείου θα είναι ορατές σε αυτή την εταιρεία.
+          </span>
+        </div>
+
+        <div className="field">
+          <label>3. Πωλητής Unisol (προαιρετικό)</label>
+          <select value={salespersonId} onChange={(e) => setSalespersonId(e.target.value)}>
+            <option value="">— Χωρίς ανάθεση —</option>
+            {salespeople.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <span className="field-hint">Ο δικός μας πωλητής που θα παρακολουθεί αυτές τις εγγραφές.</span>
+        </div>
+
+        <div className="field">
+          <label>4. Αρχείο Excel (.xlsx) *</label>
           <input type="file" accept=".xlsx,.xls" onChange={onPickFile} />
         </div>
 

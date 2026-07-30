@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import { createLead } from '../actions';
 import { PRIORITY, LEAD_TYPE } from '@/lib/labels';
 
 export default async function NewLeadPage() {
   const supabase = await createClient();
+  await requireInternal(supabase);
   const { data: salespeople } = await supabase
     .from('profiles')
     .select('id, name:full_name')

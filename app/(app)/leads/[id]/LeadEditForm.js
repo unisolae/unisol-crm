@@ -14,7 +14,7 @@ function SaveButton() {
   );
 }
 
-export default function LeadEditForm({ lead, salespeople, action }) {
+export default function LeadEditForm({ lead, salespeople, action, isPartner = false, assignedSalesperson = null }) {
   const [status, setStatus] = useState(lead.crm_status);
 
   return (
@@ -48,17 +48,24 @@ export default function LeadEditForm({ lead, salespeople, action }) {
           </div>
         )}
 
-        <div className="field">
-          <label>Πωλητής</label>
-          <select name="salesperson_id" defaultValue={lead.salesperson_id ?? ''}>
-            <option value="">— Χωρίς ανάθεση —</option>
-            {salespeople.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {isPartner ? (
+          <div className="field">
+            <label>Πωλητής Unisol</label>
+            <div className="field-ro">{assignedSalesperson || '— Χωρίς ανάθεση —'}</div>
+          </div>
+        ) : (
+          <div className="field">
+            <label>Πωλητής</label>
+            <select name="salesperson_id" defaultValue={lead.salesperson_id ?? ''}>
+              <option value="">— Χωρίς ανάθεση —</option>
+              {salespeople.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="field">
           <label>Προτεραιότητα</label>
@@ -93,17 +100,19 @@ export default function LeadEditForm({ lead, salespeople, action }) {
           <input name="sale_value_eur" type="text" inputMode="decimal" defaultValue={lead.sale_value_eur ?? ''} placeholder="π.χ. 12500" />
         </div>
 
-        <div className="field">
-          <label>Νομός</label>
-          <select name="prefecture" defaultValue={lead.prefecture ?? ''}>
-            <option value="">— Επιλογή —</option>
-            {PREFECTURES.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!isPartner && (
+          <div className="field">
+            <label>Νομός</label>
+            <select name="prefecture" defaultValue={lead.prefecture ?? ''}>
+              <option value="">— Επιλογή —</option>
+              {PREFECTURES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="field full">
           <label>Συνεργάτης (ποιος έφερε τη δουλειά)</label>

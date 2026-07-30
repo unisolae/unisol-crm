@@ -22,9 +22,11 @@ export default async function AppLayout({ children }) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role, companies(name)')
+    .select('full_name, role, partner_org_id, companies(name)')
     .eq('id', user.id)
     .single();
+
+  const isPartner = !!profile?.partner_org_id;
 
   const { count: initialUnread } = await supabase
     .from('notifications')
@@ -39,12 +41,14 @@ export default async function AppLayout({ children }) {
         roleLabel={ROLE_LABELS[profile?.role] ?? ''}
         userId={user.id}
         initialUnread={initialUnread ?? 0}
+        isPartner={isPartner}
       />
       <main className="app-main">{children}</main>
       <BottomNav
         fullName={profile?.full_name ?? user.email}
         roleLabel={ROLE_LABELS[profile?.role] ?? ''}
         initialUnread={initialUnread ?? 0}
+        isPartner={isPartner}
       />
     </div>
   );

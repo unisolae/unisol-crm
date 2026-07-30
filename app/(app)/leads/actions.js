@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getAccess, assertLeadWritable } from '@/lib/access';
 
 const COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -21,6 +22,12 @@ function num(v) {
 
 export async function createLead(formData) {
   const supabase = await createClient();
+
+  // Οι συνεργαζόμενες εταιρείες δεν δημιουργούν leads — δουλεύουν όσα τους αναθέτουμε.
+  const acc = await getAccess(supabase);
+  if (acc.isPartner) {
+    return { error: 'Οι συνεργαζόμενες εταιρείες δεν δημιουργούν νέα leads.' };
+  }
 
   const crmStatus = clean(formData.get('crm_status')) || 'unknown';
 
@@ -60,6 +67,11 @@ export async function createLead(formData) {
 export async function updateLead(id, formData) {
   const supabase = await createClient();
 
+  // Δικαίωμα εγγραφής: εσωτερικοί → πάντα· συνεργάτης → μόνο τα δικά του leads.
+  const gate = await assertLeadWritable(supabase, id);
+  if (!gate.ok) return { error: gate.error };
+  const isPartner = gate.acc.isPartner;
+
   const crmStatus = clean(formData.get('crm_status')) || 'unknown';
 
   const payload = {
@@ -67,8 +79,6 @@ export async function updateLead(id, formData) {
     // Λόγος αρνητικής έκβασης: κρατιέται μόνο όταν η κατάσταση είναι «Αρνητική».
     negative_reason:
       crmStatus === 'negative' ? clean(formData.get('negative_reason')) : null,
-    salesperson_id: clean(formData.get('salesperson_id')),
-    prefecture: clean(formData.get('prefecture')),
     priority: clean(formData.get('priority')),
     lead_type: clean(formData.get('lead_type')) || 'technical',
     associate: clean(formData.get('associate')),
@@ -78,6 +88,13 @@ export async function updateLead(id, formData) {
     notes: clean(formData.get('notes')),
     updated_at: new Date().toISOString(),
   };
+
+  // Πεδία που ΜΟΝΟ εσωτερικοί χρήστες ορίζουν (ο πωλητής μας, ο νομός).
+  // Για συνεργάτες ΔΕΝ τα περνάμε καν στο payload, ώστε να μη μηδενιστούν κατά λάθος.
+  if (!isPartner) {
+    payload.salesperson_id = clean(formData.get('salesperson_id'));
+    payload.prefecture = clean(formData.get('prefecture'));
+  }
 
   const { error } = await supabase.from('leads').update(payload).eq('id', id);
 
@@ -94,9 +111,14 @@ export async function updateLead(id, formData) {
 export async function quickUpdateLead(id, patch) {
   const supabase = await createClient();
 
+  const gate = await assertLeadWritable(supabase, id);
+  if (!gate.ok) return { error: gate.error };
+  const isPartner = gate.acc.isPartner;
+
   const allowed = {};
   if ('crm_status' in patch) allowed.crm_status = clean(patch.crm_status) || 'unknown';
-  if ('salesperson_id' in patch) allowed.salesperson_id = clean(patch.salesperson_id);
+  // Ο πωλητής αλλάζει μόνο από εσωτερικούς χρήστες.
+  if (!isPartner && 'salesperson_id' in patch) allowed.salesperson_id = clean(patch.salesperson_id);
   if ('lead_size_eur' in patch) allowed.lead_size_eur = num(patch.lead_size_eur);
   if ('priority' in patch) allowed.priority = clean(patch.priority);
   if ('lead_type' in patch) allowed.lead_type = clean(patch.lead_type) || 'technical';
@@ -105,6 +127,27 @@ export async function quickUpdateLead(id, patch) {
   const { error } = await supabase.from('leads').update(allowed).eq('id', id);
   if (error) return { error: error.message };
 
+  revalidatePath('/leads');
+  return { ok: true };
+}
+
+// Απόσυρση / επαναφορά της πρόσβασης συνεργάτη σε ένα lead (μόνο εσωτερικοί).
+// Όταν revoked=true, ο συνεργάτης δεν το βλέπει πια (χωρίς να χαθεί η ανάθεση).
+export async function setLeadPartnerAccess(id, revoked) {
+  const supabase = await createClient();
+
+  const acc = await getAccess(supabase);
+  if (!acc.user) return { error: 'Δεν είστε συνδεδεμένος.' };
+  if (acc.isPartner) return { error: 'Μη εξουσιοδοτημένη ενέργεια.' };
+
+  const { error } = await supabase
+    .from('leads')
+    .update({ partner_access_revoked: !!revoked, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/leads/${id}`);
   revalidatePath('/leads');
   return { ok: true };
 }

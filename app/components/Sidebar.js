@@ -34,7 +34,20 @@ const NAV = [
   },
 ];
 
-export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0 }) {
+// Περιορισμένη πλοήγηση για συνεργαζόμενες εταιρείες (π.χ. Baumit):
+// μόνο τα leads τους + το ημερολόγιό τους. Χωρίς μηνύματα/διαχείριση.
+const PARTNER_NAV = [
+  {
+    section: 'Κυρίως',
+    items: [
+      { href: '/leads', label: 'Leads', icon: 'ti-target' },
+      { href: '/calendar', label: 'Ημερολόγιο', icon: 'ti-calendar' },
+    ],
+  },
+];
+
+export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0, isPartner = false }) {
+  const nav = isPartner ? PARTNER_NAV : NAV;
   const pathname = usePathname();
   const router = useRouter();
   const [unread, setUnread] = useState(initialUnread);
@@ -126,7 +139,7 @@ export default function Sidebar({ fullName, roleLabel, userId, initialUnread = 0
         </div>
 
         <nav className="sb-nav">
-          {NAV.map((group) => (
+          {nav.map((group) => (
             <div key={group.section} className="sb-group">
               <div className="sb-sec">{group.section}</div>
               {group.items.map((item) => {

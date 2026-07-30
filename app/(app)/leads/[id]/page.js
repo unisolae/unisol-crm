@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { updateLead } from '../actions';
+import { getAccess } from '@/lib/access';
+import { updateLead, setLeadPartnerAccess } from '../actions';
 import { createAction, updateAction, deleteAction, completeAction } from '@/app/(app)/actions/actions';
 import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
 import ActionItem from './ActionItem';
 import LeadPartners from './LeadPartners';
+import PartnerAccessCard from './PartnerAccessCard';
 import { NEGATIVE_REASON } from '@/lib/labels';
 
 // Ταξινόμηση χρονολογίου: προγραμματισμένες (επερχόμενες) πάνω, μετά ολοκληρωμένες (πρόσφατες πρώτα).
@@ -44,11 +46,13 @@ export default async function LeadDetail({ params, searchParams }) {
 
   const { data: lead } = await supabase
     .from('leads')
-    .select('*, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
+    .select('*, salespeople:profiles!leads_salesperson_id_fkey(name:full_name), partner_org:partner_orgs!leads_partner_org_id_fkey(name)')
     .eq('id', id)
     .single();
 
   if (!lead) notFound();
+
+  const acc = await getAccess(supabase);
 
   const { data: salespeople } = await supabase
     .from('profiles')
@@ -109,6 +113,15 @@ export default async function LeadDetail({ params, searchParams }) {
         </div>
       </div>
 
+      {!acc.isPartner && lead.partner_org_id && (
+        <PartnerAccessCard
+          leadId={id}
+          orgName={lead.partner_org?.name || 'Συνεργαζόμενη εταιρεία'}
+          revoked={lead.partner_access_revoked}
+          action={setLeadPartnerAccess}
+        />
+      )}
+
       <div className="detail-grid">
         <section className="card">
           <h2>Στοιχεία {lead.source === 'manual' ? 'έργου' : 'άδειας'}</h2>
@@ -116,7 +129,7 @@ export default async function LeadDetail({ params, searchParams }) {
           <Row
             label="Μηχανικός"
             value={
-              lead.engineer_id ? (
+              lead.engineer_id && !acc.isPartner ? (
                 <Link href={`/engineers/${lead.engineer_id}`}>{lead.engineer}</Link>
               ) : (
                 lead.engineer
@@ -138,7 +151,13 @@ export default async function LeadDetail({ params, searchParams }) {
 
         <section className="card">
           <h2>Διαχείριση πώλησης</h2>
-          <LeadEditForm lead={lead} salespeople={salespeople ?? []} action={saveLead} />
+          <LeadEditForm
+            lead={lead}
+            salespeople={salespeople ?? []}
+            action={saveLead}
+            isPartner={acc.isPartner}
+            assignedSalesperson={lead.salespeople?.name || null}
+          />
         </section>
       </div>
 

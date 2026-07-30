@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import ActionsFilter from './ActionsFilter';
 import { partnerName } from '@/lib/labels';
 
@@ -18,6 +19,7 @@ export default async function ActionsPage({ searchParams }) {
   const statusFilter = sp?.status || 'all'; // all | planned | done
 
   const supabase = await createClient();
+  await requireInternal(supabase);
 
   let query = supabase
     .from('actions')

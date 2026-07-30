@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import InboxClient from './InboxClient';
 import { markAllNotificationsRead } from './actions';
 
 export default async function InboxPage() {
   const supabase = await createClient();
+  await requireInternal(supabase);
 
   const {
     data: { user },

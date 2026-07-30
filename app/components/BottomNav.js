@@ -6,8 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 // Κάτω μπάρα πλοήγησης (μόνο σε κινητό — κρύβεται στο desktop μέσω CSS).
-// Κέντρο: το κόκκινο «+» για γρήγορη καταχώριση από το πεδίο.
-export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
+// Εσωτερικοί χρήστες: πλήρες μενού με κεντρικό «+» για γρήγορη καταχώριση.
+// Συνεργάτες (isPartner): περιορισμένο — μόνο Leads + Ημερολόγιο + Μενού.
+export default function BottomNav({ fullName, roleLabel, initialUnread = 0, isPartner = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [unread, setUnread] = useState(initialUnread);
@@ -23,8 +24,10 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
     } catch {}
   }, []);
 
-  // Ελαφρύ: polling + visibility (το realtime το κρατά το Sidebar/FaviconBadge)
+  // Ελαφρύ: polling + visibility (το realtime το κρατά το Sidebar/FaviconBadge).
+  // Οι συνεργάτες δεν έχουν μηνύματα, οπότε δεν χρειάζεται polling.
   useEffect(() => {
+    if (isPartner) return;
     refreshCount();
     const pollId = setInterval(refreshCount, 30000);
     const onVisible = () => {
@@ -35,13 +38,13 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
       clearInterval(pollId);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [refreshCount]);
+  }, [refreshCount, isPartner]);
 
   // Κλείσιμο φύλλου + ανανέωση μετρητή σε κάθε αλλαγή σελίδας
   useEffect(() => {
     setSheet(null);
-    refreshCount();
-  }, [pathname, refreshCount]);
+    if (!isPartner) refreshCount();
+  }, [pathname, refreshCount, isPartner]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -65,43 +68,66 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
   return (
     <>
       <nav className="bnav" aria-label="Κύρια πλοήγηση">
-        <Link href="/dashboard" className={tabCls('/dashboard')}>
-          <i className="ti ti-home" aria-hidden="true" />
-          Αρχική
-        </Link>
-        <Link href="/leads" className={tabCls('/leads')}>
-          <i className="ti ti-target" aria-hidden="true" />
-          Leads
-        </Link>
-        <button
-          type="button"
-          className="bnav-item bnav-plus-wrap"
-          onClick={() => setSheet(sheet === 'plus' ? null : 'plus')}
-          aria-label="Νέα καταχώριση"
-        >
-          <span className="bnav-plus">
-            <i className="ti ti-plus" aria-hidden="true" />
-          </span>
-        </button>
-        <Link href="/inbox" className={tabCls('/inbox')} style={{ position: 'relative' }}>
-          <i className="ti ti-inbox" aria-hidden="true" />
-          Μηνύματα
-          {unread > 0 && <span className="bnav-badge">{unread > 99 ? '99+' : unread}</span>}
-        </Link>
-        <button
-          type="button"
-          className={'bnav-item' + (sheet === 'menu' ? ' on' : '')}
-          onClick={() => setSheet(sheet === 'menu' ? null : 'menu')}
-        >
-          <i className="ti ti-menu-2" aria-hidden="true" />
-          Μενού
-        </button>
+        {isPartner ? (
+          <>
+            <Link href="/leads" className={tabCls('/leads')}>
+              <i className="ti ti-target" aria-hidden="true" />
+              Leads
+            </Link>
+            <Link href="/calendar" className={tabCls('/calendar')}>
+              <i className="ti ti-calendar" aria-hidden="true" />
+              Ημερολόγιο
+            </Link>
+            <button
+              type="button"
+              className={'bnav-item' + (sheet === 'menu' ? ' on' : '')}
+              onClick={() => setSheet(sheet === 'menu' ? null : 'menu')}
+            >
+              <i className="ti ti-menu-2" aria-hidden="true" />
+              Μενού
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/dashboard" className={tabCls('/dashboard')}>
+              <i className="ti ti-home" aria-hidden="true" />
+              Αρχική
+            </Link>
+            <Link href="/leads" className={tabCls('/leads')}>
+              <i className="ti ti-target" aria-hidden="true" />
+              Leads
+            </Link>
+            <button
+              type="button"
+              className="bnav-item bnav-plus-wrap"
+              onClick={() => setSheet(sheet === 'plus' ? null : 'plus')}
+              aria-label="Νέα καταχώριση"
+            >
+              <span className="bnav-plus">
+                <i className="ti ti-plus" aria-hidden="true" />
+              </span>
+            </button>
+            <Link href="/inbox" className={tabCls('/inbox')} style={{ position: 'relative' }}>
+              <i className="ti ti-inbox" aria-hidden="true" />
+              Μηνύματα
+              {unread > 0 && <span className="bnav-badge">{unread > 99 ? '99+' : unread}</span>}
+            </Link>
+            <button
+              type="button"
+              className={'bnav-item' + (sheet === 'menu' ? ' on' : '')}
+              onClick={() => setSheet(sheet === 'menu' ? null : 'menu')}
+            >
+              <i className="ti ti-menu-2" aria-hidden="true" />
+              Μενού
+            </button>
+          </>
+        )}
       </nav>
 
       {sheet && (
         <div className="bsheet-bg" onClick={() => setSheet(null)}>
           <div className="bsheet" onClick={(e) => e.stopPropagation()}>
-            {sheet === 'plus' ? (
+            {sheet === 'plus' && !isPartner ? (
               <>
                 <div className="bsheet-title">Νέα καταχώριση</div>
                 <Link href="/leads/new" className="bsheet-row">
@@ -120,6 +146,24 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0 }) {
                   <i className="ti ti-users" aria-hidden="true" />
                   Νέος συνεργάτης
                 </Link>
+              </>
+            ) : isPartner ? (
+              <>
+                <div className="bsheet-user">
+                  <span className="bsheet-av">{initials}</span>
+                  <span>
+                    <b>{fullName}</b>
+                    <small>{roleLabel}</small>
+                  </span>
+                </div>
+                <Link href="/calendar" className="bsheet-row">
+                  <i className="ti ti-calendar" aria-hidden="true" />
+                  Ημερολόγιο
+                </Link>
+                <button type="button" className="bsheet-row danger" onClick={handleLogout}>
+                  <i className="ti ti-logout" aria-hidden="true" />
+                  Αποσύνδεση
+                </button>
               </>
             ) : (
               <>

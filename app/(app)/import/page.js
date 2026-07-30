@@ -28,5 +28,14 @@ export default async function ImportPage() {
     );
   }
 
-  return <ImportClient />;
+  const [{ data: partnerOrgs }, { data: salespeople }] = await Promise.all([
+    supabase.from('partner_orgs').select('id, name').eq('is_active', true).order('name'),
+    supabase
+      .from('profiles')
+      .select('id, name:full_name')
+      .eq('is_salesperson', true)
+      .order('full_name'),
+  ]);
+
+  return <ImportClient partnerOrgs={partnerOrgs ?? []} salespeople={salespeople ?? []} />;
 }

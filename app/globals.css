@@ -2963,3 +2963,75 @@ a.glance-row:hover {
   color: var(--muted);
   flex-shrink: 0;
 }
+
+/* ── Φάση 2: πρόσβαση συνεργαζόμενης εταιρείας (partner orgs) ─────────────── */
+
+/* Κάρτα ανάθεσης/απόσυρσης πρόσβασης — φαίνεται μόνο σε εσωτερικούς χρήστες
+   πάνω από τα στοιχεία του lead. */
+.partner-access {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--sky);
+  border-radius: var(--radius);
+}
+.partner-access.is-revoked {
+  border-left-color: var(--muted);
+  background: var(--cream);
+}
+.partner-access .pa-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.partner-access .pa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--sky);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.partner-access.is-revoked .pa-badge {
+  background: var(--line-soft);
+  color: var(--muted);
+}
+.partner-access .pa-state {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.partner-access .pa-actions {
+  flex-shrink: 0;
+}
+.partner-access .pa-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.partner-access .pa-err {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* Πεδίο μόνο-ανάγνωσης (π.χ. ο πωλητής Unisol όπως τον βλέπει ο συνεργάτης) */
+.field-ro {
+  padding: 9px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}

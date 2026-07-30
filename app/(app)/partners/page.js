@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { requireInternal } from '@/lib/access';
 import PartnersFilters from './PartnersFilters';
 import { PARTNER_TYPE, partnerName } from '@/lib/labels';
 
@@ -9,6 +10,7 @@ export default async function PartnersPage({ searchParams }) {
   const typeList = (sp.type ?? '').split(',').filter(Boolean);
 
   const supabase = await createClient();
+  await requireInternal(supabase);
 
   let query = supabase
     .from('partners')

@@ -14,6 +14,9 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get('file');
   const prefecture = formData.get('prefecture');
+  // Ανάθεση σε επίπεδο batch (προαιρετική): συνεργαζόμενη εταιρεία + δικός μας πωλητής.
+  const partnerOrgId = (formData.get('partner_org_id') || '').toString().trim() || null;
+  const salespersonId = (formData.get('salesperson_id') || '').toString().trim() || null;
 
   if (!file || typeof file === 'string') {
     return NextResponse.json({ error: 'Δεν βρέθηκε αρχείο.' }, { status: 400 });
@@ -59,6 +62,8 @@ export async function POST(request) {
     crm_status: 'unknown',
     lead_type: 'technical',
     prefecture, // αυτόματη ανάθεση νομού σε όλες τις εγγραφές
+    partner_org_id: partnerOrgId, // ανάθεση σε συνεργαζόμενη εταιρεία (ή null)
+    salesperson_id: salespersonId, // δικός μας πωλητής (ή null)
     imported_at: importedAt,
   }));
 
