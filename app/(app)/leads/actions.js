@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccess, assertLeadWritable } from '@/lib/access';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -150,4 +151,48 @@ export async function setLeadPartnerAccess(id, revoked) {
   revalidatePath(`/leads/${id}`);
   revalidatePath('/leads');
   return { ok: true };
+}
+
+// Μαζική διαγραφή leads. Επιτρέπεται σε εσωτερικούς ΚΑΙ σε συνεργάτες
+// (οι συνεργάτες μόνο στα δικά τους, μη-αποσυρμένα). ΔΕΝ διαγράφονται leads
+// που έχουν ενέργειες (θεωρούνται «διερευνημένα»). Service-role με ρητό
+// έλεγχο χρήστη + tenant/partner scope· σβήνει πρώτα τις ετικέτες συνεργατών.
+export async function bulkDeleteLeads(ids) {
+  const supabase = await createClient();
+  const acc = await getAccess(supabase);
+  if (!acc.user) return { error: 'Δεν είστε συνδεδεμένος.' };
+
+  const wanted = (Array.isArray(ids) ? ids : [])
+    .map((x) => String(x))
+    .filter((x) => /^[0-9a-fA-F-]{36}$/.test(x));
+  if (wanted.length === 0) return { error: 'Καμία έγκυρη επιλογή.' };
+
+  const admin = createAdminClient();
+
+  let scopeQ = admin.from('leads').select('id').eq('company_id', COMPANY_ID).in('id', wanted);
+  if (acc.isPartner) {
+    scopeQ = scopeQ.eq('partner_org_id', acc.partnerOrgId).eq('partner_access_revoked', false);
+  }
+  const { data: scoped, error: sErr } = await scopeQ;
+  if (sErr) return { error: 'Σφάλμα ελέγχου: ' + sErr.message };
+  const scopedIds = (scoped ?? []).map((r) => r.id);
+  if (scopedIds.length === 0) return { error: 'Δεν βρέθηκαν leads προς διαγραφή.' };
+
+  const { data: acts, error: aErr } = await admin
+    .from('actions').select('lead_id').in('lead_id', scopedIds);
+  if (aErr) return { error: 'Σφάλμα ελέγχου ενεργειών: ' + aErr.message };
+  const hasActions = new Set((acts ?? []).map((r) => r.lead_id));
+  const deletable = scopedIds.filter((id) => !hasActions.has(id));
+  const skipped = scopedIds.length - deletable.length;
+
+  if (deletable.length === 0) return { ok: true, deleted: 0, skipped };
+
+  await admin.from('lead_partners').delete().in('lead_id', deletable);
+  await admin.from('messages').update({ lead_id: null }).in('lead_id', deletable);
+
+  const { error: dErr } = await admin.from('leads').delete().in('id', deletable);
+  if (dErr) return { error: 'Σφάλμα διαγραφής: ' + dErr.message };
+
+  revalidatePath('/leads');
+  return { ok: true, deleted: deletable.length, skipped };
 }

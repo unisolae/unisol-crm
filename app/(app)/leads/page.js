@@ -5,6 +5,8 @@ import LeadsFilters from './LeadsFilters';
 import LeadsTabs from './LeadsTabs';
 import LeadsScope from './LeadsScope';
 import { InlineStatus, InlineSalesperson, InlineSize, InlinePriority, InlineType } from './InlineEdit';
+import { BulkProvider, RowCheck, HeadCheck } from './BulkSelect';
+import { bulkDeleteLeads } from './actions';
 import { CRM_STATUS } from '@/lib/labels';
 
 export default async function LeadsPage({ searchParams }) {
@@ -103,6 +105,87 @@ export default async function LeadsPage({ searchParams }) {
     negative: cNegative.count ?? 0,
   };
 
+  // Μαζική επιλογή/διαγραφή: διαθέσιμη σε ΟΛΟΥΣ (εσωτερικούς & συνεργάτες).
+  // Οι συνεργάτες βλέπουν ούτως ή άλλως μόνο τα δικά τους leads (RLS)· ο έλεγχος
+  // δικαιωμάτων + ο κανόνας «όχι όσα έχουν ενέργειες» γίνεται στο server action.
+  const bulk = true;
+  const allIds = (leads ?? []).map((l) => l.id);
+  const colSpan = bulk ? 9 : 8;
+
+  const tableEl = (
+    <div className="table-wrap d-only">
+      <table className="leads-table">
+        <thead>
+          <tr>
+            {bulk && (
+              <th style={{ width: 34, textAlign: 'center' }}>
+                <HeadCheck ids={allIds} />
+              </th>
+            )}
+            <th>Έργο</th>
+            <th>Περιοχή</th>
+            <th>Συνεργάτης</th>
+            <th>Πωλητής</th>
+            <th>Τύπος</th>
+            <th>Προτερ.</th>
+            <th>Μέγεθος</th>
+            <th>Κατάσταση</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(leads ?? []).map((l) => {
+            return (
+              <tr key={l.id} className="row-link">
+                {bulk && (
+                  <td style={{ textAlign: 'center' }}>
+                    <RowCheck id={l.id} />
+                  </td>
+                )}
+                <td className="cell-main">
+                  <Link href={`/leads/${l.id}${ctxStr ? `?from=${encodeURIComponent(ctxStr)}` : ''}`}>
+                    {l.project_desc || '—'}
+                  </Link>
+                  {l.engineer && <span className="cell-sub">{l.engineer.split('(')[0].trim()}</span>}
+                </td>
+                <td>
+                  {l.city || '—'}
+                  {l.municipality && <span className="cell-sub">{l.municipality}</span>}
+                </td>
+                <td>{l.associate || (l.source === 'manual' ? '—' : '')}</td>
+                <td className="cell-edit">
+                  {isPartner ? (
+                    <span>{l.salespeople?.name || '—'}</span>
+                  ) : (
+                    <InlineSalesperson id={l.id} value={l.salesperson_id} salespeople={salespeople ?? []} />
+                  )}
+                </td>
+                <td className="cell-edit">
+                  <InlineType id={l.id} value={l.lead_type} />
+                </td>
+                <td className="cell-edit">
+                  <InlinePriority id={l.id} value={l.priority} />
+                </td>
+                <td className="cell-edit">
+                  <InlineSize id={l.id} value={l.lead_size_eur} />
+                </td>
+                <td className="cell-edit">
+                  <InlineStatus id={l.id} value={l.crm_status} />
+                </td>
+              </tr>
+            );
+          })}
+          {(!leads || leads.length === 0) && (
+            <tr>
+              <td colSpan={colSpan} className="empty-row">
+                Δεν βρέθηκαν leads με αυτά τα κριτήρια.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div className="page">
       <div className="page-head with-action">
@@ -123,67 +206,7 @@ export default async function LeadsPage({ searchParams }) {
 
       <LeadsFilters salespeople={salespeople ?? []} />
 
-      <div className="table-wrap d-only">
-        <table className="leads-table">
-          <thead>
-            <tr>
-              <th>Έργο</th>
-              <th>Περιοχή</th>
-              <th>Συνεργάτης</th>
-              <th>Πωλητής</th>
-              <th>Τύπος</th>
-              <th>Προτερ.</th>
-              <th>Μέγεθος</th>
-              <th>Κατάσταση</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(leads ?? []).map((l) => {
-              return (
-                <tr key={l.id} className="row-link">
-                  <td className="cell-main">
-                    <Link href={`/leads/${l.id}${ctxStr ? `?from=${encodeURIComponent(ctxStr)}` : ''}`}>
-                      {l.project_desc || '—'}
-                    </Link>
-                    {l.engineer && <span className="cell-sub">{l.engineer.split('(')[0].trim()}</span>}
-                  </td>
-                  <td>
-                    {l.city || '—'}
-                    {l.municipality && <span className="cell-sub">{l.municipality}</span>}
-                  </td>
-                  <td>{l.associate || (l.source === 'manual' ? '—' : '')}</td>
-                  <td className="cell-edit">
-                    {isPartner ? (
-                      <span>{l.salespeople?.name || '—'}</span>
-                    ) : (
-                      <InlineSalesperson id={l.id} value={l.salesperson_id} salespeople={salespeople ?? []} />
-                    )}
-                  </td>
-                  <td className="cell-edit">
-                    <InlineType id={l.id} value={l.lead_type} />
-                  </td>
-                  <td className="cell-edit">
-                    <InlinePriority id={l.id} value={l.priority} />
-                  </td>
-                  <td className="cell-edit">
-                    <InlineSize id={l.id} value={l.lead_size_eur} />
-                  </td>
-                  <td className="cell-edit">
-                    <InlineStatus id={l.id} value={l.crm_status} />
-                  </td>
-                </tr>
-              );
-            })}
-            {(!leads || leads.length === 0) && (
-              <tr>
-                <td colSpan={8} className="empty-row">
-                  Δεν βρέθηκαν leads με αυτά τα κριτήρια.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {bulk ? <BulkProvider action={bulkDeleteLeads}>{tableEl}</BulkProvider> : tableEl}
 
       {/* Κινητό: λίστα-κάρτες (η επεξεργασία γίνεται μέσα στην καρτέλα) */}
       <div className="m-cards m-only">
