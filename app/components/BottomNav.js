@@ -74,6 +74,10 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0, isPa
               <i className="ti ti-target" aria-hidden="true" />
               Leads
             </Link>
+            <Link href="/engineers" className={tabCls('/engineers')}>
+              <i className="ti ti-helmet" aria-hidden="true" />
+              Μηχανικοί
+            </Link>
             <Link href="/calendar" className={tabCls('/calendar')}>
               <i className="ti ti-calendar" aria-hidden="true" />
               Ημερολόγιο
@@ -156,6 +160,10 @@ export default function BottomNav({ fullName, roleLabel, initialUnread = 0, isPa
                     <small>{roleLabel}</small>
                   </span>
                 </div>
+                <Link href="/engineers" className="bsheet-row">
+                  <i className="ti ti-helmet" aria-hidden="true" />
+                  Μηχανικοί
+                </Link>
                 <Link href="/calendar" className="bsheet-row">
                   <i className="ti ti-calendar" aria-hidden="true" />
                   Ημερολόγιο

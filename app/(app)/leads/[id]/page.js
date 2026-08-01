@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getAccess } from '@/lib/access';
-import { updateLead, setLeadPartnerAccess } from '../actions';
+import { updateLead, setLeadPartnerAccess, shareLeadWithPartner } from '../actions';
 import { createAction, updateAction, deleteAction, completeAction } from '@/app/(app)/actions/actions';
 import LeadEditForm from './LeadEditForm';
 import ActionForm from './ActionForm';
@@ -53,6 +53,17 @@ export default async function LeadDetail({ params, searchParams }) {
   if (!lead) notFound();
 
   const acc = await getAccess(supabase);
+
+  // Λίστα ενεργών συνεργαζόμενων εταιρειών για το picker κοινοποίησης (κάθε εσωτερικός).
+  let partnerOrgs = [];
+  if (!acc.isPartner) {
+    const { data: orgs } = await supabase
+      .from('partner_orgs')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name');
+    partnerOrgs = orgs ?? [];
+  }
 
   const { data: salespeople } = await supabase
     .from('profiles')
@@ -113,12 +124,16 @@ export default async function LeadDetail({ params, searchParams }) {
         </div>
       </div>
 
-      {!acc.isPartner && lead.partner_org_id && (
+      {!acc.isPartner && (
         <PartnerAccessCard
           leadId={id}
+          currentOrgId={lead.partner_org_id || ''}
           orgName={lead.partner_org?.name || 'Συνεργαζόμενη εταιρεία'}
           revoked={lead.partner_access_revoked}
-          action={setLeadPartnerAccess}
+          canShare={!acc.isPartner}
+          partnerOrgs={partnerOrgs}
+          shareAction={shareLeadWithPartner}
+          accessAction={setLeadPartnerAccess}
         />
       )}
 

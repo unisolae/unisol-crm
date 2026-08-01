@@ -35,12 +35,14 @@ const NAV = [
 ];
 
 // Περιορισμένη πλοήγηση για συνεργαζόμενες εταιρείες (π.χ. Baumit):
-// μόνο τα leads τους + το ημερολόγιό τους. Χωρίς μηνύματα/διαχείριση.
+// τα leads τους, οι μηχανικοί των αδειών τους και το ημερολόγιό τους.
+// Χωρίς μηνύματα/διαχείριση.
 const PARTNER_NAV = [
   {
     section: 'Κυρίως',
     items: [
       { href: '/leads', label: 'Leads', icon: 'ti-target' },
+      { href: '/engineers', label: 'Μηχανικοί', icon: 'ti-helmet' },
       { href: '/calendar', label: 'Ημερολόγιο', icon: 'ti-calendar' },
     ],
   },

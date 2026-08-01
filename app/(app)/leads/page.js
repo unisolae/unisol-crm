@@ -16,6 +16,7 @@ export default async function LeadsPage({ searchParams }) {
   const salesList = (sp.sp ?? '').split(',').filter(Boolean);
   const prioList = (sp.prio ?? '').split(',').filter(Boolean);
   const typeList = (sp.type ?? '').split(',').filter(Boolean);
+  const prefList = (sp.pref ?? '').split(',').filter(Boolean);
   // scope: 'mine' (δικά μου + αδιάθετα, προεπιλογή) | 'all'
   const scope = sp.scope === 'all' ? 'all' : 'mine';
 
@@ -46,6 +47,7 @@ export default async function LeadsPage({ searchParams }) {
   if (sp.sp) ctx.set('sp', sp.sp);
   if (sp.prio) ctx.set('prio', sp.prio);
   if (sp.type) ctx.set('type', sp.type);
+  if (sp.pref) ctx.set('pref', sp.pref);
   if (sp.scope) ctx.set('scope', sp.scope);
   const ctxStr = ctx.toString();
 
@@ -60,6 +62,7 @@ export default async function LeadsPage({ searchParams }) {
     if (salesList.length) query = query.in('salesperson_id', salesList);
     if (prioList.length) query = query.in('priority', prioList);
     if (typeList.length) query = query.in('lead_type', typeList);
+    if (prefList.length) query = query.in('prefecture', prefList);
     if (q) {
       const like = `%${q}%`;
       query = query.or(
@@ -72,7 +75,7 @@ export default async function LeadsPage({ searchParams }) {
   let leadsQuery = applyBaseFilters(
     supabase
       .from('leads')
-      .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
+      .select('id, project_desc, city, municipality, engineer, associate, crm_status, lead_size_eur, source, salesperson_id, priority, lead_type, imported_at, created_at, salespeople:profiles!leads_salesperson_id_fkey(name:full_name)')
       .order('created_at', { ascending: false })
       .limit(300)
   );
@@ -96,7 +99,15 @@ export default async function LeadsPage({ searchParams }) {
     countQuery('closed'),
     countQuery('negative'),
   ]);
-  const leads = leadsRes.data;
+  // Ταξινόμηση: προτεραιότητα (Υψηλή → Μέτρια → Χαμηλή → καμία) και, με ίδια
+  // προτεραιότητα, ημερομηνία εισαγωγής (νεότερες πρώτες). Η ημ. εισαγωγής είναι
+  // το imported_at (άδειες) ή, αν λείπει, το created_at (χειροκίνητες καταχωρίσεις).
+  const PRIO_RANK = { high: 0, medium: 1, low: 2 };
+  const prioRank = (p) => (p in PRIO_RANK ? PRIO_RANK[p] : 3);
+  const entryTime = (l) => new Date(l.imported_at || l.created_at || 0).getTime();
+  const leads = (leadsRes.data ?? [])
+    .slice()
+    .sort((a, b) => prioRank(a.priority) - prioRank(b.priority) || entryTime(b) - entryTime(a));
   const counts = {
     all: cAll.count ?? 0,
     active: cActive.count ?? 0,

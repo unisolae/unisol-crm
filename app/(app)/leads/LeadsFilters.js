@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import MultiSelect from './MultiSelect';
 import { PRIORITY, LEAD_TYPE, toOptions } from '@/lib/labels';
+import { PREFECTURES } from '@/lib/prefectures';
 
 const STATUS_OPTIONS = [
   { value: 'unknown', label: 'Άγνωστη' },
@@ -13,6 +14,7 @@ const STATUS_OPTIONS = [
 ];
 const PRIORITY_OPTIONS = toOptions(PRIORITY);
 const TYPE_OPTIONS = toOptions(LEAD_TYPE);
+const PREFECTURE_OPTIONS = PREFECTURES.map((p) => ({ value: p, label: p }));
 
 export default function LeadsFilters({ salespeople }) {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function LeadsFilters({ salespeople }) {
   const spSel = (searchParams.get('sp') ?? '').split(',').filter(Boolean);
   const prioSel = (searchParams.get('prio') ?? '').split(',').filter(Boolean);
   const typeSel = (searchParams.get('type') ?? '').split(',').filter(Boolean);
+  const prefSel = (searchParams.get('pref') ?? '').split(',').filter(Boolean);
 
   // debounce της αναζήτησης
   useEffect(() => {
@@ -78,6 +81,12 @@ export default function LeadsFilters({ salespeople }) {
         options={TYPE_OPTIONS}
         selected={typeSel}
         onChange={(v) => setMulti('type', v)}
+      />
+      <MultiSelect
+        label="Νομός"
+        options={PREFECTURE_OPTIONS}
+        selected={prefSel}
+        onChange={(v) => setMulti('pref', v)}
       />
     </div>
   );

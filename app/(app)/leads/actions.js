@@ -153,6 +153,50 @@ export async function setLeadPartnerAccess(id, revoked) {
   return { ok: true };
 }
 
+// Κοινοποίηση / αφαίρεση κοινοποίησης ενός lead σε συνεργαζόμενη εταιρεία
+// (π.χ. Baumit) — το ίδιο που κάνει η μαζική εισαγωγή από Excel, αλλά επιλεκτικά
+// για ένα lead που είναι ήδη μέσα στην εφαρμογή. Επιτρέπεται σε ΚΑΘΕ εσωτερικό
+// χρήστη· οι συνεργάτες ΔΕΝ αλλάζουν αναθέσεις (και το RLS τους μπλοκάρει).
+//   partnerOrgId κενό/null → αφαίρεση ανάθεσης (καθαρό ξεκίνημα, ξανα-κοινοποιήσιμο).
+//   partnerOrgId με τιμή   → ανάθεση + άρση τυχόν προηγούμενης απόσυρσης.
+export async function shareLeadWithPartner(id, partnerOrgId) {
+  const supabase = await createClient();
+
+  const acc = await getAccess(supabase);
+  if (!acc.user) return { error: 'Δεν είστε συνδεδεμένος.' };
+  if (acc.isPartner) return { error: 'Μη εξουσιοδοτημένη ενέργεια.' };
+
+  const orgId = clean(partnerOrgId);
+
+  // Αν δόθηκε εταιρεία, επιβεβαιώνουμε ότι υπάρχει, είναι ενεργή και ανήκει στην
+  // εταιρεία μας (αμυντικός έλεγχος, δεύτερη γραμμή πάνω από το RLS).
+  if (orgId) {
+    const { data: org } = await supabase
+      .from('partner_orgs')
+      .select('id')
+      .eq('id', orgId)
+      .eq('company_id', COMPANY_ID)
+      .eq('is_active', true)
+      .single();
+    if (!org) return { error: 'Μη έγκυρη συνεργαζόμενη εταιρεία.' };
+  }
+
+  const { error } = await supabase
+    .from('leads')
+    .update({
+      partner_org_id: orgId, // null = αφαίρεση ανάθεσης
+      partner_access_revoked: false, // κάθε νέα ανάθεση/αφαίρεση ξεκινά «ενεργή»
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/leads/${id}`);
+  revalidatePath('/leads');
+  return { ok: true };
+}
+
 // Μαζική διαγραφή leads. Επιτρέπεται σε εσωτερικούς ΚΑΙ σε συνεργάτες
 // (οι συνεργάτες μόνο στα δικά τους, μη-αποσυρμένα). ΔΕΝ διαγράφονται leads
 // που έχουν ενέργειες (θεωρούνται «διερευνημένα»). Service-role με ρητό

@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { requireInternal } from '@/lib/access';
+import { getAccess } from '@/lib/access';
 import { normalizeName } from '@/lib/engineers';
 import EngineersFilters from './EngineersFilters';
 
@@ -9,7 +10,11 @@ export default async function EngineersPage({ searchParams }) {
   const q = (sp.q ?? '').trim();
 
   const supabase = await createClient();
-  await requireInternal(supabase);
+  // Προσβάσιμο και σε συνεργάτες: το RLS περιορίζει αυτόματα τη λίστα στους
+  // μηχανικούς των αδειών που τους έχουν κοινοποιηθεί.
+  const acc = await getAccess(supabase);
+  if (!acc.user) redirect('/login');
+  const isPartner = acc.isPartner;
 
   let query = supabase
     .from('engineers')
@@ -43,7 +48,10 @@ export default async function EngineersPage({ searchParams }) {
         <div>
           <h1>Μηχανικοί</h1>
           <p>
-            {engineers.length} εγγραφές · ενημερώνεται αυτόματα από την εισαγωγή αδειών
+            {engineers.length} εγγραφές ·{' '}
+            {isPartner
+              ? 'μηχανικοί των αδειών που σας έχουν κοινοποιηθεί'
+              : 'ενημερώνεται αυτόματα από την εισαγωγή αδειών'}
           </p>
         </div>
       </div>

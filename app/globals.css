@@ -3035,3 +3035,40 @@ a.glance-row:hover {
   display: flex;
   align-items: center;
 }
+
+/* ── Φάση 2: κάρτα κοινοποίησης — κατάσταση «χωρίς ανάθεση» (share, μόνο admin) ── */
+.partner-access.is-unassigned {
+  border-left-color: var(--accent);
+}
+.partner-access .pa-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+.partner-access .pa-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.partner-access .pa-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.partner-access .pa-picker select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+.partner-access .pa-unassign {
+  padding-inline: 10px;
+}

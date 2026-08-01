@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { getAccess } from '@/lib/access';
 
 function clean(v) {
   if (v === null || v === undefined) return null;
@@ -12,8 +13,13 @@ function clean(v) {
 // Ενημέρωση στοιχείων επικοινωνίας / παρατηρήσεων μηχανικού.
 // Τα στοιχεία ΥΔΟΜ (όνομα, ΤΕΕ, ειδικότητα) μένουν κλειδωμένα —
 // ενημερώνονται μόνο αυτόματα από την εισαγωγή αδειών.
+// Μόνο εσωτερικοί χρήστες· οι συνεργάτες βλέπουν τα στοιχεία μόνο-ανάγνωση.
 export async function updateEngineerContact(id, formData) {
   const supabase = await createClient();
+
+  const acc = await getAccess(supabase);
+  if (!acc.user) return { error: 'Δεν είστε συνδεδεμένος.' };
+  if (acc.isPartner) return { error: 'Μη εξουσιοδοτημένη ενέργεια.' };
 
   const payload = {
     phone: clean(formData.get('phone')),
