@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getAccess } from '@/lib/access';
 import { CRM_STATUS } from '@/lib/labels';
 import { updateEngineerContact } from '../actions';
 import EngineerContactForm from './EngineerContactForm';
@@ -17,11 +16,6 @@ export default async function EngineerDetail({ params }) {
     .single();
 
   if (!engineer) notFound();
-
-  // Οι συνεργάτες βλέπουν την καρτέλα (RLS τους δίνει μόνο μηχανικούς των δικών
-  // τους αδειών) αλλά τα στοιχεία επικοινωνίας είναι μόνο-ανάγνωση για αυτούς.
-  const acc = await getAccess(supabase);
-  const isPartner = acc.isPartner;
 
   // Οι άδειες του μηχανικού — ανάποδη χρονολογική σειρά (ημ. έκδοσης, μετά καταχώριση)
   const { data: leadsRaw } = await supabase
@@ -79,30 +73,7 @@ export default async function EngineerDetail({ params }) {
 
       <section className="card">
         <h2>Στοιχεία επικοινωνίας</h2>
-        {isPartner ? (
-          (() => {
-            const rows = [
-              ['Τηλέφωνο', engineer.phone],
-              ['Email', engineer.email],
-              [
-                'Διεύθυνση',
-                [engineer.address, engineer.city, engineer.postal_code].filter(Boolean).join(', '),
-              ],
-              ['Παρατηρήσεις', engineer.notes],
-            ].filter(([, v]) => v);
-            if (rows.length === 0) {
-              return <div className="dash-empty">Δεν υπάρχουν καταχωρημένα στοιχεία επικοινωνίας.</div>;
-            }
-            return rows.map(([label, value]) => (
-              <div key={label} className="info-row">
-                <span className="info-label">{label}</span>
-                <span className="info-value">{value}</span>
-              </div>
-            ));
-          })()
-        ) : (
-          <EngineerContactForm engineer={engineer} action={saveContact} />
-        )}
+        <EngineerContactForm engineer={engineer} action={saveContact} />
       </section>
 
       <section className="card">
